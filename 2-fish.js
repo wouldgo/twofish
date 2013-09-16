@@ -1,15 +1,28 @@
 function twoFish() {
   var isAnArray = function(someVar) {
-    if( Object.prototype.toString.call( someVar ) === '[object Array]' ) {
+    if( Object.prototype.toString.call( someVar ) === '[object Array]' ||
+        Object.prototype.toString.call( someVar ) === '[object Uint8Array]') {
       return true;
     } else {
       return false;
     };
+  }
+  , areEqual = function(a, b) {
+    var aLength = a.length;
+    if (aLength != b.length) {
+      return false;
+    }
+
+    for (var i = 0; i < aLength; i++) {
+      if (a[i] != b[i]) {
+        return false;
+      }
+    }
+    return true;
   };
 
-  // Fixed 8x8 permutation S-boxex
-  var P = [
-    [ // p0
+  // S-boxes
+  var P0 = new Uint8Array([
     0xA9, 0x67, 0xB3, 0xE8,
     0x04, 0xFD, 0xA3, 0x76,
     0x9A, 0x92, 0x80, 0x78,
@@ -74,8 +87,8 @@ function twoFish() {
     0xD3, 0x5D, 0x0F, 0x00,
     0x6F, 0x9D, 0x36, 0x42,
     0x4A, 0x5E, 0xC1, 0xE0
-    ],
-    [ // p1
+    ])
+  , P1 = new Uint8Array([
     0x75, 0xF3, 0xC6, 0xF4,
     0xDB, 0x7B, 0xFB, 0xC8,
     0x4A, 0xD3, 0xE6, 0x6B,
@@ -140,13 +153,13 @@ function twoFish() {
     0x50, 0x04, 0xF6, 0xC2,
     0x16, 0x25, 0x86, 0x56,
     0x55, 0x09, 0xBE, 0x91
-    ]
-  ]
+    ])
+  , P = [P0, P1]
   , ALGORITHM = 'Twofish'
   , VERSION = 0.2
-  , BLOCK_SIZE = 16 // bytes in a data-block
+  , BLOCK_SIZE = 16
   , ROUNDS = 16
-  , MAX_ROUNDS = 16 // max # rounds (for allocating subkeys)
+  , MAX_ROUNDS = 16
   , SK_STEP = 0x02020202
   , SK_BUMP = 0x01010101
   , SK_ROTL = 9
@@ -155,8 +168,8 @@ function twoFish() {
   , ROUND_SUBKEYS = OUTPUT_WHITEN + BLOCK_SIZE/4 // 2*(# rounds)
   , TOTAL_SUBKEYS = ROUND_SUBKEYS + 2*MAX_ROUNDS;
 
-  // Define the fixed p0/p1 permutations used in keyed S-box lookup.
-  // By changing the following constant definitions, the S-boxes will automatically get changed in the Twofish engine.
+  // Fixed p0/p1 permutations used in S-box lookup.
+  // Change the following constant definitions, then S-boxes will automatically get changed.
   var P_00 = 1
   , P_01 = 0
   , P_02 = 0
@@ -226,9 +239,6 @@ function twoFish() {
 
     return localMDS;
   }
-  , HEX_DIGITS = [
-    '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
-  ]
   , RS_GF_FDBK = 0x14D;
 
   var b0 = function(x) {
@@ -255,8 +265,8 @@ function twoFish() {
     }
     , RS_rem = function(x) {
       var b  =  (x >>> 24) & 0xFF
-        , g2 = ((b  <<  1) ^ ( (b & 0x80) != 0 ? RS_GF_FDBK : 0 )) & 0xFF
-        , g3 =  (b >>>  1) ^ ( (b & 0x01) != 0 ? (RS_GF_FDBK >>> 1) : 0 ) ^ g2
+        , g2 = ((b << 1) ^ ( (b & 0x80) != 0 ? RS_GF_FDBK : 0 )) & 0xFF
+        , g3 =  (b >>> 1) ^ ( (b & 0x01) != 0 ? (RS_GF_FDBK >>> 1) : 0 ) ^ g2
         , result = (x << 8) ^ (g3 << 24) ^ (g2 << 16) ^ (g3 << 8) ^ b;
       return result;
     }
@@ -285,9 +295,9 @@ function twoFish() {
 
       switch (k64Cnt & 3) {
         case 1:
-          result = localMDS[0][(P[P_01][lB0] & 0xFF) ^ b0(k0)] ^ 
-                   localMDS[1][(P[P_11][lB1] & 0xFF) ^ b1(k0)] ^ 
-                   localMDS[2][(P[P_21][lB2] & 0xFF) ^ b2(k0)] ^ 
+          result = localMDS[0][(P[P_01][lB0] & 0xFF) ^ b0(k0)] ^
+                   localMDS[1][(P[P_11][lB1] & 0xFF) ^ b1(k0)] ^
+                   localMDS[2][(P[P_21][lB2] & 0xFF) ^ b2(k0)] ^
                    localMDS[3][(P[P_31][lB3] & 0xFF) ^ b3(k0)];
           break;
         case 0:  // same as 4
@@ -301,9 +311,9 @@ function twoFish() {
           lB2 = (P[P_23][lB2] & 0xFF) ^ b2(k2);
           lB3 = (P[P_33][lB3] & 0xFF) ^ b3(k2);
         case 2:
-          result = localMDS[0][(P[P_01][(P[P_02][lB0] & 0xFF) ^ b0(k1)] & 0xFF) ^ b0(k0)] ^ 
-                   localMDS[1][(P[P_11][(P[P_12][lB1] & 0xFF) ^ b1(k1)] & 0xFF) ^ b1(k0)] ^ 
-                   localMDS[2][(P[P_21][(P[P_22][lB2] & 0xFF) ^ b2(k1)] & 0xFF) ^ b2(k0)] ^ 
+          result = localMDS[0][(P[P_01][(P[P_02][lB0] & 0xFF) ^ b0(k1)] & 0xFF) ^ b0(k0)] ^
+                   localMDS[1][(P[P_11][(P[P_12][lB1] & 0xFF) ^ b1(k1)] & 0xFF) ^ b1(k0)] ^
+                   localMDS[2][(P[P_21][(P[P_22][lB2] & 0xFF) ^ b2(k1)] & 0xFF) ^ b2(k0)] ^
                    localMDS[3][(P[P_31][(P[P_32][lB3] & 0xFF) ^ b3(k1)] & 0xFF) ^ b3(k0)];
         break;
       }
@@ -434,11 +444,11 @@ function twoFish() {
      x0 ^= sKey[OUTPUT_WHITEN + 2];
      x1 ^= sKey[OUTPUT_WHITEN + 3];
 
-    return [x2, (x2 >>> 8), (x2 >>> 16), (x2 >>> 24),
+    return new Uint8Array([x2, (x2 >>> 8), (x2 >>> 16), (x2 >>> 24),
         x3, (x3 >>> 8), (x3 >>> 16), (x3 >>> 24),
         x0, (x0 >>> 8), (x0 >>> 16), (x0 >>> 24),
         x1, (x1 >>> 8), (x1 >>> 16), (x1 >>> 24)
-      ];
+      ]);
     } else {
       throw 'input block is not an array or sessionKey is incorrect';
     };
@@ -484,29 +494,15 @@ function twoFish() {
       x2 ^= sKey[INPUT_WHITEN + 2];
       x3 ^= sKey[INPUT_WHITEN + 3];
 
-      return [ x0, (x0 >>> 8), (x0 >>> 16), (x0 >>> 24),
+      return new Uint8Array([ x0, (x0 >>> 8), (x0 >>> 16), (x0 >>> 24),
         x1, (x1 >>> 8), (x1 >>> 16), (x1 >>> 24),
         x2, (x2 >>> 8), (x2 >>> 16), (x2 >>> 24),
         x3, (x3 >>> 8), (x3 >>> 16), (x3 >>> 24)
-      ];
+      ]);
     } else {
       throw 'input block is not an array or sessionKey is incorrect';
     };
   }
-
-  var areEqual = function(a, b) {
-      var aLength = a.length;
-      if (aLength != b.length) {
-        return false;
-      }
-
-      for (var i = 0; i < aLength; i++) {
-        if (a[i] != b[i]) {
-          return false;
-        }
-      }
-      return true;
-   }
 
   var self_test = function(keysize) {
     var ok = false
@@ -531,6 +527,9 @@ function twoFish() {
   }
 
   return {
+    makeKey : makeKey,
+    blockEncrypt : blockEncrypt,
+    blockDecrypt : blockDecrypt,
     test : self_test
   };
 }

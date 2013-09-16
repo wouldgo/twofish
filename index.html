@@ -1,7 +1,16 @@
 <html>
 <head>
     <title>2Fish</title>
-    <script type="text/javascript" async="" src="2-fish.js"></script>
+    <script type="text/javascript" src="2-fish.js"></script>
+    <script type="text/javascript">
+      var twoFish = twoFish();
+      var res32 = twoFish.test(32)
+        , res24 = twoFish.test(24)
+        , res16 = twoFish.test(16)
+        , res8 = twoFish.test(8);
+
+      console.log('8bit', res8, ': 16bit', res16, ': 24bit', res24, ' : 32bit', res32);
+    </script>
 </head>
 <body>
 </body>
