@@ -200,35 +200,32 @@ function twoFish() {
   , Mx_Y = function(x) {
     return x ^ LFSR1(x) ^ LFSR2(x);
   }
-  , computeMDSMatrix = function() {
-    if (!MDS) {
-      MDS =  [];
-      var m1 = []
-        , mX = []
-        , mY = []
-        , i
-        , j;
-      for (i = 0; i < 256; i++) {
-        j = P[0][i] & 0xFF;
-        m1[0] = j;
-        mX[0] = Mx_X(j) & 0xFF;
-        mY[0] = Mx_Y(j) & 0xFF;
+  , MDS = function() {
+    var localMDS = [[],[],[],[]]
+      , m1 = []
+      , mX = []
+      , mY = []
+      , i
+      , j;
+    for (i = 0; i < 256; i++) {
+      j = P[0][i] & 0xFF;
+      m1[0] = j;
+      mX[0] = Mx_X(j) & 0xFF;
+      mY[0] = Mx_Y(j) & 0xFF;
 
-        j = P[1][i] & 0xFF;
-        m1[1] = j;
-        mX[1] = Mx_X(j) & 0xFF;
-        mY[1] = Mx_Y(j) & 0xFF;
+      j = P[1][i] & 0xFF;
+      m1[1] = j;
+      mX[1] = Mx_X(j) & 0xFF;
+      mY[1] = Mx_Y(j) & 0xFF;
 
-        MDS[0][i] = m1[P_00] <<  0 | mX[P_00] <<  8 | mY[P_00] << 16 | mY[P_00] << 24;
-        MDS[1][i] = mY[P_10] <<  0 | mY[P_10] <<  8 | mX[P_10] << 16 | m1[P_10] << 24;
-        MDS[2][i] = mX[P_20] <<  0 | mY[P_20] <<  8 | m1[P_20] << 16 | mY[P_20] << 24;
-        MDS[3][i] = mX[P_30] <<  0 | m1[P_30] <<  8 | mY[P_30] << 16 | mX[P_30] << 24;
-      }
+      localMDS[0][i] = m1[P_00] <<  0 | mX[P_00] <<  8 | mY[P_00] << 16 | mY[P_00] << 24;
+      localMDS[1][i] = mY[P_10] <<  0 | mY[P_10] <<  8 | mX[P_10] << 16 | m1[P_10] << 24;
+      localMDS[2][i] = mX[P_20] <<  0 | mY[P_20] <<  8 | m1[P_20] << 16 | mY[P_20] << 24;
+      localMDS[3][i] = mX[P_30] <<  0 | m1[P_30] <<  8 | mY[P_30] << 16 | mX[P_30] << 24;
     }
 
-    return MDS;
+    return localMDS;
   }
-  , MDS = computeMDSMatrix()
   , HEX_DIGITS = [
     '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
   ]
@@ -275,32 +272,39 @@ function twoFish() {
       return r;
     }
     , F32 = function(k64Cnt, x, k32 ) {
-        var b0 = b0(x)
-          , b1 = b1(x)
-          , b2 = b2(x)
-          , b3 = b3(x)
+        var lB0 = b0(x)
+          , lB1 = b1(x)
+          , lB2 = b2(x)
+          , lB3 = b3(x)
           , k0 = k32[0]
           , k1 = k32[1]
           , k2 = k32[2]
           , k3 = k32[3]
+          , localMDS = MDS()
           , result = 0;
 
       switch (k64Cnt & 3) {
         case 1:
-          result = MDS[0][(P[P_01][b0] & 0xFF) ^ b0(k0)] ^ MDS[1][(P[P_11][b1] & 0xFF) ^ b1(k0)] ^ MDS[2][(P[P_21][b2] & 0xFF) ^ b2(k0)] ^ MDS[3][(P[P_31][b3] & 0xFF) ^ b3(k0)];
+          result = localMDS[0][(P[P_01][lB0] & 0xFF) ^ b0(k0)] ^ 
+                   localMDS[1][(P[P_11][lB1] & 0xFF) ^ b1(k0)] ^ 
+                   localMDS[2][(P[P_21][lB2] & 0xFF) ^ b2(k0)] ^ 
+                   localMDS[3][(P[P_31][lB3] & 0xFF) ^ b3(k0)];
           break;
         case 0:  // same as 4
-          b0 = (P[P_04][b0] & 0xFF) ^ b0(k3);
-          b1 = (P[P_14][b1] & 0xFF) ^ b1(k3);
-          b2 = (P[P_24][b2] & 0xFF) ^ b2(k3);
-          b3 = (P[P_34][b3] & 0xFF) ^ b3(k3);
+          lB0 = (P[P_04][lB0] & 0xFF) ^ b0(k3);
+          lB1 = (P[P_14][lB1] & 0xFF) ^ b1(k3);
+          lB2 = (P[P_24][lB2] & 0xFF) ^ b2(k3);
+          lB3 = (P[P_34][lB3] & 0xFF) ^ b3(k3);
         case 3:
-          b0 = (P[P_03][b0] & 0xFF) ^ b0(k2);
-          b1 = (P[P_13][b1] & 0xFF) ^ b1(k2);
-          b2 = (P[P_23][b2] & 0xFF) ^ b2(k2);
-          b3 = (P[P_33][b3] & 0xFF) ^ b3(k2);
+          lB0 = (P[P_03][lB0] & 0xFF) ^ b0(k2);
+          lB1 = (P[P_13][lB1] & 0xFF) ^ b1(k2);
+          lB2 = (P[P_23][lB2] & 0xFF) ^ b2(k2);
+          lB3 = (P[P_33][lB3] & 0xFF) ^ b3(k2);
         case 2:
-          result = MDS[0][(P[P_01][(P[P_02][b0] & 0xFF) ^ b0(k1)] & 0xFF) ^ b0(k0)] ^ MDS[1][(P[P_11][(P[P_12][b1] & 0xFF) ^ b1(k1)] & 0xFF) ^ b1(k0)] ^ MDS[2][(P[P_21][(P[P_22][b2] & 0xFF) ^ b2(k1)] & 0xFF) ^ b2(k0)] ^ MDS[3][(P[P_31][(P[P_32][b3] & 0xFF) ^ b3(k1)] & 0xFF) ^ b3(k0)];
+          result = localMDS[0][(P[P_01][(P[P_02][lB0] & 0xFF) ^ b0(k1)] & 0xFF) ^ b0(k0)] ^ 
+                   localMDS[1][(P[P_11][(P[P_12][lB1] & 0xFF) ^ b1(k1)] & 0xFF) ^ b1(k0)] ^ 
+                   localMDS[2][(P[P_21][(P[P_22][lB2] & 0xFF) ^ b2(k1)] & 0xFF) ^ b2(k0)] ^ 
+                   localMDS[3][(P[P_31][(P[P_32][lB3] & 0xFF) ^ b3(k1)] & 0xFF) ^ b3(k0)];
         break;
       }
       return result;
@@ -317,7 +321,7 @@ function twoFish() {
         throw 'incorrect key length';
       }
 
-      var k64Cnt = length / 8
+      var k64Cnt = keyLenght / 8
         , subkeyCnt = ROUND_SUBKEYS + 2*ROUNDS
         , k32e = []
         , k32o = []
@@ -329,13 +333,14 @@ function twoFish() {
         , A
         , B
         , subKeys = []
-        , b0
-        , b1
-        , b2
-        , b3
-        , sBox = [];
+        , lB0
+        , lB1
+        , lB2
+        , lB3
+        , sBox = []
+        , localMDS = MDS();
 
-      for (i = 0, j = k64Cnt-1; i < 4 && offset < length; i++, j--) {
+      for (i = 0, j = k64Cnt-1; i < 4 && offset < keyLenght; i++, j--) {
         k32e[i] = (aKey[offset++] & 0xFF) | (aKey[offset++] & 0xFF) <<  8 | (aKey[offset++] & 0xFF) << 16 | (aKey[offset++] & 0xFF) << 24;
         k32o[i] = (aKey[offset++] & 0xFF) | (aKey[offset++] & 0xFF) <<  8 | (aKey[offset++] & 0xFF) << 16 | (aKey[offset++] & 0xFF) << 24;
         sBoxKey[j] = RS_MDS_Encode(k32e[i], k32o[i]);
@@ -357,29 +362,29 @@ function twoFish() {
         , k3 = sBoxKey[3];
 
       for (i = 0; i < 256; i++) {
-        b0 = b1 = b2 = b3 = i;
+        lB0 = lB1 = lB2 = lB3 = i;
         switch (k64Cnt & 3) {
           case 1:
-            sBox[2*i] = MDS[0][(P[P_01][b0] & 0xFF) ^ b0(k0)];
-            sBox[2*i+1] = MDS[1][(P[P_11][b1] & 0xFF) ^ b1(k0)];
-            sBox[0x200+2*i] = MDS[2][(P[P_21][b2] & 0xFF) ^ b2(k0)];
-            sBox[0x200+2*i+1] = MDS[3][(P[P_31][b3] & 0xFF) ^ b3(k0)];
+            sBox[2*i] = localMDS[0][(P[P_01][lB0] & 0xFF) ^ b0(k0)];
+            sBox[2*i+1] = localMDS[1][(P[P_11][lB1] & 0xFF) ^ b1(k0)];
+            sBox[0x200+2*i] = localMDS[2][(P[P_21][lB2] & 0xFF) ^ b2(k0)];
+            sBox[0x200+2*i+1] = localMDS[3][(P[P_31][lB3] & 0xFF) ^ b3(k0)];
             break;
-          case 0: // same as 4
-            b0 = (P[P_04][b0] & 0xFF) ^ b0(k3);
-            b1 = (P[P_14][b1] & 0xFF) ^ b1(k3);
-            b2 = (P[P_24][b2] & 0xFF) ^ b2(k3);
-            b3 = (P[P_34][b3] & 0xFF) ^ b3(k3);
+          case 0:
+            lB0 = (P[P_04][lB0] & 0xFF) ^ b0(k3);
+            lB1 = (P[P_14][lB1] & 0xFF) ^ b1(k3);
+            lB2 = (P[P_24][lB2] & 0xFF) ^ b2(k3);
+            lB3 = (P[P_34][lB3] & 0xFF) ^ b3(k3);
           case 3:
-            b0 = (P[P_03][b0] & 0xFF) ^ b0(k2);
-            b1 = (P[P_13][b1] & 0xFF) ^ b1(k2);
-            b2 = (P[P_23][b2] & 0xFF) ^ b2(k2);
-            b3 = (P[P_33][b3] & 0xFF) ^ b3(k2);
+            lB0 = (P[P_03][lB0] & 0xFF) ^ b0(k2);
+            lB1 = (P[P_13][lB1] & 0xFF) ^ b1(k2);
+            lB2 = (P[P_23][lB2] & 0xFF) ^ b2(k2);
+            lB3 = (P[P_33][lB3] & 0xFF) ^ b3(k2);
           case 2:
-            sBox[2*i] = MDS[0][(P[P_01][(P[P_02][b0] & 0xFF) ^ b0(k1)] & 0xFF) ^ b0(k0)];
-            sBox[2*i+1] = MDS[1][(P[P_11][(P[P_12][b1] & 0xFF) ^ b1(k1)] & 0xFF) ^ b1(k0)];
-            sBox[0x200+2*i = MDS[2][(P[P_21][(P[P_22][b2] & 0xFF) ^ b2(k1)] & 0xFF) ^ b2(k0)];
-            sBox[0x200+2*i+1] = MDS[3][(P[P_31][(P[P_32][b3] & 0xFF) ^ b3(k1)] & 0xFF) ^ b3(k0)];
+            sBox[2*i] = localMDS[0][(P[P_01][(P[P_02][lB0] & 0xFF) ^ b0(k1)] & 0xFF) ^ b0(k0)];
+            sBox[2*i+1] = localMDS[1][(P[P_11][(P[P_12][lB1] & 0xFF) ^ b1(k1)] & 0xFF) ^ b1(k0)];
+            sBox[0x200+2*i] = localMDS[2][(P[P_21][(P[P_22][lB2] & 0xFF) ^ b2(k1)] & 0xFF) ^ b2(k0)];
+            sBox[0x200+2*i+1] = localMDS[3][(P[P_31][(P[P_32][lB3] & 0xFF) ^ b3(k1)] & 0xFF) ^ b3(k0)];
         }
       }
 
