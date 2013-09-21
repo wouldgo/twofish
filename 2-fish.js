@@ -7,14 +7,28 @@ function twoFish() {
       return false;
     };
   }
-  , areEqual = function(a, b) {
-    var aLength = a.length;
-    if (aLength != b.length) {
-      return false;
+  , areEqual = function(first, second) {
+    var firstLength = first.length,
+      secondLength = second.length;
+
+    if (firstLength > secondLength) {
+      var diff = firstLength - secondLength;
+      for (; diff >= 0; diff -= 1) {
+        if (first[firstLength - diff]) {
+          return false;
+        }
+      }
+    } else if (secondLength > firstLength) {
+      var diff = secondLength - firstLength;
+      for (; diff >= 0; diff -= 1) {
+        if (second[secondLength - diff]) {
+          return false;
+        }
+      }
     }
 
-    for (var i = 0; i < aLength; i++) {
-      if (a[i] != b[i]) {
+    for (var i = 0; i < firstLength; i++) {
+      if (first[i] != second[i]) {
         return false;
       }
     }
@@ -238,7 +252,7 @@ function twoFish() {
     }
 
     return localMDS;
-  }
+  }()
   , RS_GF_FDBK = 0x14D;
 
   var b0 = function(x) {
@@ -290,15 +304,14 @@ function twoFish() {
           , k1 = k32[1]
           , k2 = k32[2]
           , k3 = k32[3]
-          , localMDS = MDS()
           , result = 0;
 
       switch (k64Cnt & 3) {
         case 1:
-          result = localMDS[0][(P[P_01][lB0] & 0xFF) ^ b0(k0)] ^
-                   localMDS[1][(P[P_11][lB1] & 0xFF) ^ b1(k0)] ^
-                   localMDS[2][(P[P_21][lB2] & 0xFF) ^ b2(k0)] ^
-                   localMDS[3][(P[P_31][lB3] & 0xFF) ^ b3(k0)];
+          result = MDS[0][(P[P_01][lB0] & 0xFF) ^ b0(k0)] ^
+                   MDS[1][(P[P_11][lB1] & 0xFF) ^ b1(k0)] ^
+                   MDS[2][(P[P_21][lB2] & 0xFF) ^ b2(k0)] ^
+                   MDS[3][(P[P_31][lB3] & 0xFF) ^ b3(k0)];
           break;
         case 0:  // same as 4
           lB0 = (P[P_04][lB0] & 0xFF) ^ b0(k3);
@@ -311,10 +324,10 @@ function twoFish() {
           lB2 = (P[P_23][lB2] & 0xFF) ^ b2(k2);
           lB3 = (P[P_33][lB3] & 0xFF) ^ b3(k2);
         case 2:
-          result = localMDS[0][(P[P_01][(P[P_02][lB0] & 0xFF) ^ b0(k1)] & 0xFF) ^ b0(k0)] ^
-                   localMDS[1][(P[P_11][(P[P_12][lB1] & 0xFF) ^ b1(k1)] & 0xFF) ^ b1(k0)] ^
-                   localMDS[2][(P[P_21][(P[P_22][lB2] & 0xFF) ^ b2(k1)] & 0xFF) ^ b2(k0)] ^
-                   localMDS[3][(P[P_31][(P[P_32][lB3] & 0xFF) ^ b3(k1)] & 0xFF) ^ b3(k0)];
+          result = MDS[0][(P[P_01][(P[P_02][lB0] & 0xFF) ^ b0(k1)] & 0xFF) ^ b0(k0)] ^
+                   MDS[1][(P[P_11][(P[P_12][lB1] & 0xFF) ^ b1(k1)] & 0xFF) ^ b1(k0)] ^
+                   MDS[2][(P[P_21][(P[P_22][lB2] & 0xFF) ^ b2(k1)] & 0xFF) ^ b2(k0)] ^
+                   MDS[3][(P[P_31][(P[P_32][lB3] & 0xFF) ^ b3(k1)] & 0xFF) ^ b3(k0)];
         break;
       }
       return result;
@@ -322,7 +335,6 @@ function twoFish() {
     , Fe32 = function(sBox, x, R) {
       return sBox[2*_b(x, R)] ^ sBox[2*_b(x, R+1) + 1] ^ sBox[0x200 + 2*_b(x, R+2)] ^ sBox[0x200 + 2*_b(x, R+3) + 1];
     };
-
 
   var makeKey = function(aKey) {
     if (aKey && isAnArray(aKey)) {
@@ -347,8 +359,7 @@ function twoFish() {
         , lB1
         , lB2
         , lB3
-        , sBox = []
-        , localMDS = MDS();
+        , sBox = [];
 
       for (i = 0, j = k64Cnt-1; i < 4 && offset < keyLenght; i++, j--) {
         k32e[i] = (aKey[offset++] & 0xFF) | (aKey[offset++] & 0xFF) <<  8 | (aKey[offset++] & 0xFF) << 16 | (aKey[offset++] & 0xFF) << 24;
@@ -375,10 +386,10 @@ function twoFish() {
         lB0 = lB1 = lB2 = lB3 = i;
         switch (k64Cnt & 3) {
           case 1:
-            sBox[2*i] = localMDS[0][(P[P_01][lB0] & 0xFF) ^ b0(k0)];
-            sBox[2*i+1] = localMDS[1][(P[P_11][lB1] & 0xFF) ^ b1(k0)];
-            sBox[0x200+2*i] = localMDS[2][(P[P_21][lB2] & 0xFF) ^ b2(k0)];
-            sBox[0x200+2*i+1] = localMDS[3][(P[P_31][lB3] & 0xFF) ^ b3(k0)];
+            sBox[2*i] = MDS[0][(P[P_01][lB0] & 0xFF) ^ b0(k0)];
+            sBox[2*i+1] = MDS[1][(P[P_11][lB1] & 0xFF) ^ b1(k0)];
+            sBox[0x200+2*i] = MDS[2][(P[P_21][lB2] & 0xFF) ^ b2(k0)];
+            sBox[0x200+2*i+1] = MDS[3][(P[P_31][lB3] & 0xFF) ^ b3(k0)];
             break;
           case 0:
             lB0 = (P[P_04][lB0] & 0xFF) ^ b0(k3);
@@ -391,14 +402,14 @@ function twoFish() {
             lB2 = (P[P_23][lB2] & 0xFF) ^ b2(k2);
             lB3 = (P[P_33][lB3] & 0xFF) ^ b3(k2);
           case 2:
-            sBox[2*i] = localMDS[0][(P[P_01][(P[P_02][lB0] & 0xFF) ^ b0(k1)] & 0xFF) ^ b0(k0)];
-            sBox[2*i+1] = localMDS[1][(P[P_11][(P[P_12][lB1] & 0xFF) ^ b1(k1)] & 0xFF) ^ b1(k0)];
-            sBox[0x200+2*i] = localMDS[2][(P[P_21][(P[P_22][lB2] & 0xFF) ^ b2(k1)] & 0xFF) ^ b2(k0)];
-            sBox[0x200+2*i+1] = localMDS[3][(P[P_31][(P[P_32][lB3] & 0xFF) ^ b3(k1)] & 0xFF) ^ b3(k0)];
+            sBox[2*i] = MDS[0][(P[P_01][(P[P_02][lB0] & 0xFF) ^ b0(k1)] & 0xFF) ^ b0(k0)];
+            sBox[2*i+1] = MDS[1][(P[P_11][(P[P_12][lB1] & 0xFF) ^ b1(k1)] & 0xFF) ^ b1(k0)];
+            sBox[0x200+2*i] = MDS[2][(P[P_21][(P[P_22][lB2] & 0xFF) ^ b2(k1)] & 0xFF) ^ b2(k0)];
+            sBox[0x200+2*i+1] = MDS[3][(P[P_31][(P[P_32][lB3] & 0xFF) ^ b3(k1)] & 0xFF) ^ b3(k0)];
         }
       }
 
-      return [sBox, subKeys];
+      return [new Uint8Array(sBox), new Uint8Array(subKeys)];
     } else {
       throw 'key passed is undefined or not an array';
     };
@@ -504,7 +515,41 @@ function twoFish() {
     };
   }
 
-  var self_test = function(keysize) {
+  var test = function(userKey, plainText) {
+    var ok = false
+      , kb = []
+      , pt = []
+      , i
+      , offset;
+
+    for (i = 0; i < userKey.length; ++i) {
+        kb.push(userKey.charCodeAt(i));
+    }
+    var key = makeKey(kb);
+
+    for (i = 0; i < plainText.length; ++i) {
+        pt.push(plainText.charCodeAt(i));
+    }
+
+    var ct = [];
+
+    for (offset = 0; offset < pt.length; offset += 16) {
+      var tmpBlock = blockEncrypt(pt, offset, key);
+      ct.push.apply(ct, tmpBlock);
+    };
+
+    var cpt = [];
+
+    for (offset = 0; offset < ct.length; offset += 16) {
+      var tmpBlock = blockDecrypt(ct, offset, key);
+      cpt.push.apply(cpt, tmpBlock);
+    };
+
+    console.log('pt:', pt, '\r\nct: ', ct, '\r\nctp : ', cpt);
+    ok = areEqual(pt, cpt);
+    return ok;
+  }
+  , selfTest = function(keysize) {
     var ok = false
       , kb = []
       , pt = []
@@ -517,19 +562,19 @@ function twoFish() {
     for (i = 0; i < BLOCK_SIZE; i++) {
       pt[i] = i;
     }
-
     var key = makeKey(kb);
     var ct = blockEncrypt(pt, 0, key);
     var cpt = blockDecrypt(ct, 0, key);
 
     ok = areEqual(pt, cpt);
     return ok;
-  }
+  };
 
   return {
     makeKey : makeKey,
     blockEncrypt : blockEncrypt,
     blockDecrypt : blockDecrypt,
-    test : self_test
+    selfTest : selfTest,
+    test : test
   };
 }
