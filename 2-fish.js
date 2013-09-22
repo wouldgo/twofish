@@ -409,7 +409,7 @@ function twoFish() {
         }
       }
 
-      return [new Uint8Array(sBox), new Uint8Array(subKeys)];
+      return [sBox, subKeys];
     } else {
       throw 'key passed is undefined or not an array';
     };
