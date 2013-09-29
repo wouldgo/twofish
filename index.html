@@ -15,8 +15,10 @@
     console.log('--------');*/
 
     var twoFishCBC = twoFishCBC();
-
-    twoFishCBC.encrypt([1,2,3,4,5,6,7,9,10,11,12,13,14,15,16,17,18]);
+    var input = [0,1,2,3,4,5,6,7,9,10,11,12,13,14,15];
+    var cp = twoFishCBC.encrypt(input);
+    var cpt = twoFishCBC.decrypt(cp);
+    console.log('input', input, '\r\ncp: ', cp, '\r\ncpt: ', cpt);
   </script>
 </head>
 <body>

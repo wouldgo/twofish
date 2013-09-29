@@ -305,17 +305,17 @@ function twoFishECB() {
     return new Uint32Array([realK1])[0];
   }
   , F32 = function(k64Cnt, x, k32 ) {
-      var realK64Cnt = k64Cnt[0]
-        , realX = x[0]
-        , lB0 = b0(realX)
-        , lB1 = b1(realX)
-        , lB2 = b2(realX)
-        , lB3 = b3(realX)
-        , k0 = k32[0]
-        , k1 = k32[1]
-        , k2 = k32[2]
-        , k3 = k32[3]
-        , result = 0;
+    var realK64Cnt = k64Cnt[0]
+      , realX = x[0]
+      , lB0 = b0(realX)
+      , lB1 = b1(realX)
+      , lB2 = b2(realX)
+      , lB3 = b3(realX)
+      , k0 = k32[0]
+      , k1 = k32[1]
+      , k2 = k32[2]
+      , k3 = k32[3]
+      , result = 0;
 
     switch (realK64Cnt & 3) {
       case 1:
@@ -665,9 +665,17 @@ RNG.prototype.choice = function(array) {
 
 function twoFishCBC(IV) {
   var rng = new RNG()
-    , utils = functionUtils()
+    , twoFishKey = [];
+  for (var i = 0; i < 32; i++) {
+
+    twoFishKey.push(rng.nextRange(0, 256));
+  };
+  twoFishKey = new Uint8Array(twoFishKey);
+
+  var utils = functionUtils()
     , initializingVector = undefined
-    , twoFishBlockSize = twoFishECB().BLOCK_SIZE
+    , twoFish = twoFishECB()
+    , sessionKey = twoFish.makeKey(twoFishKey);
 
   if (IV && utils.isAnArray(IV) && IV.length === 16) {
 
@@ -687,38 +695,114 @@ function twoFishCBC(IV) {
     throw 'Initlializing vector incorrect';
   };
 
-  var encrypt = function(input) {
+  var XORBuffers = function(a, b) {
+    var res = [];
+
+    if (a && b &&
+      utils.isAnArray(a) && utils.isAnArray(b) &&
+      a.length != b.length) {
+
+      throw 'Buffer length must be equal';
+    }
+    a = new Uint8Array(a);
+    b = new Uint8Array(b);
+
+    for (var i = 0; i < a.length; i++) {
+
+      res[i] = (a[i] ^ b[i]) & 0xFF;
+    }
+
+    return new Uint8Array(res);
+  }
+  , padArray = function(arrayInput) {
+    if (arrayInput && utils.isAnArray(arrayInput)) {
+
+      if (arrayInput.length < twoFish.BLOCK_SIZE) {
+
+        var diff = twoFish.BLOCK_SIZE - arrayInput.length;
+        for (var i = 0; i < diff; i++) {
+          arrayInput.push(0x00);
+        };
+      };
+
+      return arrayInput;
+    } else {
+
+      throw 'Input is not an array';
+    };
+  }
+  , encrypt = function(input) {
     if (input && utils.isAnArray(input)) {
-      var result = []
-        , loops = input.length / twoFishBlockSize
-        , start = 0
+      var input = padArray(input)
+        , result = []
+        , loops = input.length / twoFish.BLOCK_SIZE
         , pos = 0
         , cBuffer = []
         , buffer1 = []
-        , buffer2 = [];
+        , buffer2 = []
+        , vector = initializingVector;
 
       for (var i = 0; i < loops; i++) {
 
-        var sliceStart = start + pos;
-        cBuffer = input.slice(sliceStart, sliceStart + twoFishBlockSize);
-    /*  // XOR user block with vector and encrypt result
-        buf1 = Util.XOR_buffers( cbuf, vector );
-        buf2 = cipher.encrypt( buf1 );
+        cBuffer = input.slice(pos, pos + twoFish.BLOCK_SIZE);
+        cBuffer = padArray(cBuffer);
+        buffer1 = XORBuffers(cBuffer, vector);
+        buffer2 = twoFish.blockEncrypt(buffer1, 0, sessionKey);
 
-        // save results of this encryption loop
-        System.arraycopy( buf2, 0, result, pos, blocksize );
-        vector = buf2;
+        for (var d = pos; d < buffer2.length + pos; d++) {
+          var position = d - pos;
+          if (buffer2[position]) {
 
-        // propagate pointer
-        pos += blocksize;*/
+            result.splice(d, 0, buffer2[position]);
+          };
+        };
+        vector = buffer2;
+        pos += twoFish.BLOCK_SIZE;
       };
-    /*return result;*/
+      return result;
+    } else {
+
+      throw 'Input passed is not an array';
+    };
+  }
+  , decrypt = function(input) {
+    if (input && utils.isAnArray(input)) {
+      var input = padArray(input)
+        , result = []
+        , loops = input.length / twoFish.BLOCK_SIZE
+        , pos = 0
+        , cBuffer = []
+        , buffer1 = []
+        , plain = []
+        , vector = initializingVector;
+
+      for (var i = 0; i < loops; i++) {
+
+        cBuffer = input.slice(pos, pos + twoFish.BLOCK_SIZE);
+        cBuffer = padArray(cBuffer);
+        buffer1 = twoFish.blockDecrypt(cBuffer, 0, sessionKey);
+        plain = XORBuffers(buffer1, vector);
+
+        for (var d = pos; d < plain.length + pos; d++) {
+          var position = d - pos;
+          if (plain[position]) {
+
+            result.splice(d, 0, plain[position]);
+          };
+        };
+        plain = [];
+        vector = cBuffer;
+
+        pos += twoFish.BLOCK_SIZE;
+      };
+      return result;
+    } else {
+      throw 'Input passed is not an array';
     };
   };
 
-
-
-    return {
-      encrypt : encrypt
-    }
+  return {
+    encrypt : encrypt,
+    decrypt : decrypt
+  }
 }
