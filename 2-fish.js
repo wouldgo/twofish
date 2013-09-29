@@ -1,4 +1,4 @@
-function twoFish() {
+function functionUtils() {
   var isAnArray = function(someVar) {
     if( Object.prototype.toString.call( someVar ) === '[object Array]' ||
         Object.prototype.toString.call( someVar ) === '[object Uint8Array]') {
@@ -35,8 +35,16 @@ function twoFish() {
     return true;
   };
 
+  return {
+    isAnArray : isAnArray,
+    areEqual : areEqual
+  };
+}
+
+function twoFishECB() {
+  var utils = functionUtils()
   // S-boxes
-  var P0 = new Uint8Array([
+  , P0 = new Uint8Array([
     0xA9, 0x67, 0xB3, 0xE8,
     0x04, 0xFD, 0xA3, 0x76,
     0x9A, 0x92, 0x80, 0x78,
@@ -169,8 +177,6 @@ function twoFish() {
     0x55, 0x09, 0xBE, 0x91
     ])
   , P = [P0, P1]
-  , ALGORITHM = 'Twofish'
-  , VERSION = 0.2
   , BLOCK_SIZE = 16
   , ROUNDS = 16
   , MAX_ROUNDS = 16
@@ -211,6 +217,7 @@ function twoFish() {
   , GF256_FDBK = 0x169
   , GF256_FDBK_2 = 0x169 / 2
   , GF256_FDBK_4 = 0x169 / 4
+  , RS_GF_FDBK = 0x14D
 
   , LFSR1 = function(x) {
     return (x >> 1) ^ ((x & 0x01) != 0 ? GF256_FDBK_2 : 0);
@@ -253,94 +260,105 @@ function twoFish() {
 
     return localMDS;
   }()
-  , RS_GF_FDBK = 0x14D;
 
-  var b0 = function(x) {
-      return  x & 0xFF;
+  , b0 = function(x) {
+    return  x & 0xFF;
+  }
+  , b1 = function(x) {
+    return (x >>> 8) & 0xFF;
+  }
+  , b2 = function(x) {
+    return (x >>> 16) & 0xFF;
+  }
+  , b3 = function(x) {
+    return (x >>> 24) & 0xFF;
+  }
+  , _b = function(x, N) {
+    var result = 0;
+    switch (N%4) {
+      case 0: result = b0(x); break;
+      case 1: result = b1(x); break;
+      case 2: result = b2(x); break;
+      case 3: result = b3(x); break;
     }
-    , b1 = function(x) {
-      return (x >>> 8) & 0xFF;
-    }
-    , b2 = function(x) {
-      return (x >>> 16) & 0xFF;
-    }
-    , b3 = function(x) {
-      return (x >>> 24) & 0xFF;
-    }
-    , _b = function(x, N) {
-      var result = 0;
-      switch (N%4) {
-        case 0: result = b0(x); break;
-        case 1: result = b1(x); break;
-        case 2: result = b2(x); break;
-        case 3: result = b3(x); break;
-      }
-      return result;
-    }
-    , RS_rem = function(x) {
-      var b  =  (x >>> 24) & 0xFF
-        , g2 = ((b << 1) ^ ( (b & 0x80) != 0 ? RS_GF_FDBK : 0 )) & 0xFF
-        , g3 =  (b >>> 1) ^ ( (b & 0x01) != 0 ? (RS_GF_FDBK >>> 1) : 0 ) ^ g2
-        , result = (x << 8) ^ (g3 << 24) ^ (g2 << 16) ^ (g3 << 8) ^ b;
-      return result;
-    }
-    , RS_MDS_Encode = function(k0, k1) {
-      var r = k1;
-      for (var i = 0; i < 4; i++) {
-        r = RS_rem(r);
-      }
-      r ^= k0;
-      for (var i = 0; i < 4; i++) {
-       r = RS_rem(r);
-      }
-      return r;
-    }
-    , F32 = function(k64Cnt, x, k32 ) {
-        var lB0 = b0(x)
-          , lB1 = b1(x)
-          , lB2 = b2(x)
-          , lB3 = b3(x)
-          , k0 = k32[0]
-          , k1 = k32[1]
-          , k2 = k32[2]
-          , k3 = k32[3]
-          , result = 0;
+    return result;
+  }
+  , RS_rem = function(x) {
+    var b  =  (x >>> 24) & 0xFF
+      , g2 = ((b << 1) ^ ( (b & 0x80) != 0 ? RS_GF_FDBK : 0 )) & 0xFF
+      , g3 =  (b >>> 1) ^ ( (b & 0x01) != 0 ? (RS_GF_FDBK >>> 1) : 0 ) ^ g2
+      , result = (x << 8) ^ (g3 << 24) ^ (g2 << 16) ^ (g3 << 8) ^ b;
+    return new Uint32Array([result])[0];
+  }
+  , RS_MDS_Encode = function(k0, k1) {
+    var realK0 = k0[0]
+      , realK1 = k1[0];
 
-      switch (k64Cnt & 3) {
-        case 1:
-          result = MDS[0][(P[P_01][lB0] & 0xFF) ^ b0(k0)] ^
-                   MDS[1][(P[P_11][lB1] & 0xFF) ^ b1(k0)] ^
-                   MDS[2][(P[P_21][lB2] & 0xFF) ^ b2(k0)] ^
-                   MDS[3][(P[P_31][lB3] & 0xFF) ^ b3(k0)];
-          break;
-        case 0:  // same as 4
-          lB0 = (P[P_04][lB0] & 0xFF) ^ b0(k3);
-          lB1 = (P[P_14][lB1] & 0xFF) ^ b1(k3);
-          lB2 = (P[P_24][lB2] & 0xFF) ^ b2(k3);
-          lB3 = (P[P_34][lB3] & 0xFF) ^ b3(k3);
-        case 3:
-          lB0 = (P[P_03][lB0] & 0xFF) ^ b0(k2);
-          lB1 = (P[P_13][lB1] & 0xFF) ^ b1(k2);
-          lB2 = (P[P_23][lB2] & 0xFF) ^ b2(k2);
-          lB3 = (P[P_33][lB3] & 0xFF) ^ b3(k2);
-        case 2:
-          result = MDS[0][(P[P_01][(P[P_02][lB0] & 0xFF) ^ b0(k1)] & 0xFF) ^ b0(k0)] ^
-                   MDS[1][(P[P_11][(P[P_12][lB1] & 0xFF) ^ b1(k1)] & 0xFF) ^ b1(k0)] ^
-                   MDS[2][(P[P_21][(P[P_22][lB2] & 0xFF) ^ b2(k1)] & 0xFF) ^ b2(k0)] ^
-                   MDS[3][(P[P_31][(P[P_32][lB3] & 0xFF) ^ b3(k1)] & 0xFF) ^ b3(k0)];
+    for (var i = 0; i < 4; i++) {
+      realK1 = RS_rem(realK1);
+    }
+    realK1 ^= realK0;
+    for (var i = 0; i < 4; i++) {
+     realK1 = RS_rem(realK1);
+    }
+
+    return new Uint32Array([realK1])[0];
+  }
+  , F32 = function(k64Cnt, x, k32 ) {
+      var realK64Cnt = k64Cnt[0]
+        , realX = x[0]
+        , lB0 = b0(realX)
+        , lB1 = b1(realX)
+        , lB2 = b2(realX)
+        , lB3 = b3(realX)
+        , k0 = k32[0]
+        , k1 = k32[1]
+        , k2 = k32[2]
+        , k3 = k32[3]
+        , result = 0;
+
+    switch (realK64Cnt & 3) {
+      case 1:
+        result = MDS[0][(P[P_01][lB0] & 0xFF) ^ b0(k0)] ^
+                 MDS[1][(P[P_11][lB1] & 0xFF) ^ b1(k0)] ^
+                 MDS[2][(P[P_21][lB2] & 0xFF) ^ b2(k0)] ^
+                 MDS[3][(P[P_31][lB3] & 0xFF) ^ b3(k0)];
         break;
-      }
-      return result;
+      case 0:  // same as 4
+        lB0 = (P[P_04][lB0] & 0xFF) ^ b0(k3);
+        lB1 = (P[P_14][lB1] & 0xFF) ^ b1(k3);
+        lB2 = (P[P_24][lB2] & 0xFF) ^ b2(k3);
+        lB3 = (P[P_34][lB3] & 0xFF) ^ b3(k3);
+      case 3:
+        lB0 = (P[P_03][lB0] & 0xFF) ^ b0(k2);
+        lB1 = (P[P_13][lB1] & 0xFF) ^ b1(k2);
+        lB2 = (P[P_23][lB2] & 0xFF) ^ b2(k2);
+        lB3 = (P[P_33][lB3] & 0xFF) ^ b3(k2);
+      case 2:
+        result = MDS[0][(P[P_01][(P[P_02][lB0] & 0xFF) ^ b0(k1)] & 0xFF) ^ b0(k0)] ^
+                 MDS[1][(P[P_11][(P[P_12][lB1] & 0xFF) ^ b1(k1)] & 0xFF) ^ b1(k0)] ^
+                 MDS[2][(P[P_21][(P[P_22][lB2] & 0xFF) ^ b2(k1)] & 0xFF) ^ b2(k0)] ^
+                 MDS[3][(P[P_31][(P[P_32][lB3] & 0xFF) ^ b3(k1)] & 0xFF) ^ b3(k0)];
+      break;
     }
-    , Fe32 = function(sBox, x, R) {
-      return sBox[2*_b(x, R)] ^ sBox[2*_b(x, R+1) + 1] ^ sBox[0x200 + 2*_b(x, R+2)] ^ sBox[0x200 + 2*_b(x, R+3) + 1];
-    };
+
+    return new Uint32Array([result])[0];
+  }
+  , Fe32 = function(sBox, x, R) {
+    var toReturn = sBox[2*_b(x, R)] ^
+                   sBox[2*_b(x, R+1) + 1] ^
+                   sBox[0x200 + 2*_b(x, R+2)] ^
+                   sBox[0x200 + 2*_b(x, R+3) + 1];
+
+    return new Uint32Array([toReturn])[0];
+  };
 
   var makeKey = function(aKey) {
-    if (aKey && isAnArray(aKey)) {
+    aKey = new Uint8Array(aKey);
+    if (aKey && utils.isAnArray(aKey)) {
       var keyLenght = aKey.length;
       if (!(keyLenght == 8 || keyLenght == 16 || keyLenght == 24 || keyLenght == 32)) {
-        throw 'incorrect key length';
+        throw 'Invalid key length';
       }
 
       var k64Cnt = keyLenght / 8
@@ -364,18 +382,20 @@ function twoFish() {
       for (i = 0, j = k64Cnt-1; i < 4 && offset < keyLenght; i++, j--) {
         k32e[i] = (aKey[offset++] & 0xFF) | (aKey[offset++] & 0xFF) <<  8 | (aKey[offset++] & 0xFF) << 16 | (aKey[offset++] & 0xFF) << 24;
         k32o[i] = (aKey[offset++] & 0xFF) | (aKey[offset++] & 0xFF) <<  8 | (aKey[offset++] & 0xFF) << 16 | (aKey[offset++] & 0xFF) << 24;
-        sBoxKey[j] = RS_MDS_Encode(k32e[i], k32o[i]);
+        sBoxKey[j] = RS_MDS_Encode(new Uint32Array([k32e[i]]), new Uint32Array([k32o[i]]));
       }
+      sBoxKey = new Uint32Array(sBoxKey);
 
       for (i = q = 0; i < subkeyCnt/2; i++, q += SK_STEP) {
-        A = F32( k64Cnt, q, k32e );
-        B = F32( k64Cnt, q+SK_BUMP, k32o );
+        A = F32(new Uint32Array([k64Cnt]), new Uint32Array([q]), new Uint32Array([k32e]));
+        B = F32(new Uint32Array([k64Cnt]), new Uint32Array([q+SK_BUMP]), new Uint32Array([k32o]));
         B = B << 8 | B >>> 24;
         A += B;
         subKeys[2*i] = A;
         A += B;
         subKeys[2*i + 1] = A << SK_ROTL | A >>> (32-SK_ROTL);
       }
+      subKeys = new Uint32Array(subKeys);
 
       var k0 = sBoxKey[0]
         , k1 = sBoxKey[1]
@@ -409,21 +429,37 @@ function twoFish() {
         }
       }
 
-      return [sBox, subKeys];
+      return [new Uint32Array(sBox), subKeys];
     } else {
       throw 'key passed is undefined or not an array';
     };
   };
 
   var blockEncrypt = function(input, inOffset, sessionKey) {
-    if (input && sessionKey && isAnArray(sessionKey) && isAnArray(input)) {
+    if (input && sessionKey && utils.isAnArray(sessionKey) && utils.isAnArray(input)) {
+      input = new Uint8Array(input);
       var sBox = sessionKey[0]
         , sKey = sessionKey[1];
 
-      var x0 = (input[inOffset++] & 0xFF) | (input[inOffset++] & 0xFF) <<  8 | (input[inOffset++] & 0xFF) << 16 | (input[inOffset++] & 0xFF) << 24
-        , x1 = (input[inOffset++] & 0xFF) | (input[inOffset++] & 0xFF) <<  8 | (input[inOffset++] & 0xFF) << 16 | (input[inOffset++] & 0xFF) << 24
-        , x2 = (input[inOffset++] & 0xFF) | (input[inOffset++] & 0xFF) <<  8 | (input[inOffset++] & 0xFF) << 16 | (input[inOffset++] & 0xFF) << 24
-        , x3 = (input[inOffset++] & 0xFF) | (input[inOffset++] & 0xFF) <<  8 | (input[inOffset++] & 0xFF) << 16 | (input[inOffset++] & 0xFF) << 24
+      var x0 = (input[inOffset++] & 0xFF) |
+               (input[inOffset++] & 0xFF) <<  8 |
+               (input[inOffset++] & 0xFF) << 16 |
+               (input[inOffset++] & 0xFF) << 24
+
+        , x1 = (input[inOffset++] & 0xFF) |
+               (input[inOffset++] & 0xFF) <<  8 |
+               (input[inOffset++] & 0xFF) << 16 |
+               (input[inOffset++] & 0xFF) << 24
+
+        , x2 = (input[inOffset++] & 0xFF) |
+               (input[inOffset++] & 0xFF) <<  8 |
+               (input[inOffset++] & 0xFF) << 16 |
+               (input[inOffset++] & 0xFF) << 24
+
+        , x3 = (input[inOffset++] & 0xFF) |
+               (input[inOffset++] & 0xFF) <<  8 |
+               (input[inOffset++] & 0xFF) << 16 |
+               (input[inOffset++] & 0xFF) << 24
 
       x0 ^= sKey[INPUT_WHITEN];
       x1 ^= sKey[INPUT_WHITEN + 1];
@@ -455,7 +491,8 @@ function twoFish() {
      x0 ^= sKey[OUTPUT_WHITEN + 2];
      x1 ^= sKey[OUTPUT_WHITEN + 3];
 
-    return new Uint8Array([x2, (x2 >>> 8), (x2 >>> 16), (x2 >>> 24),
+    return new Uint8Array(
+      [ x2, (x2 >>> 8), (x2 >>> 16), (x2 >>> 24),
         x3, (x3 >>> 8), (x3 >>> 16), (x3 >>> 24),
         x0, (x0 >>> 8), (x0 >>> 16), (x0 >>> 24),
         x1, (x1 >>> 8), (x1 >>> 16), (x1 >>> 24)
@@ -466,14 +503,29 @@ function twoFish() {
   };
 
   var blockDecrypt = function(input, inOffset, sessionKey) {
-    if (input && sessionKey && isAnArray(sessionKey) && isAnArray(input)) {
+    if (input && sessionKey && utils.isAnArray(sessionKey) && utils.isAnArray(input)) {
       var sBox = sessionKey[0]
         , sKey = sessionKey[1];
 
-      var x2 = (input[inOffset++] & 0xFF) | (input[inOffset++] & 0xFF) <<  8 | (input[inOffset++] & 0xFF) << 16 | (input[inOffset++] & 0xFF) << 24
-        , x3 = (input[inOffset++] & 0xFF) | (input[inOffset++] & 0xFF) <<  8 | (input[inOffset++] & 0xFF) << 16 | (input[inOffset++] & 0xFF) << 24
-        , x0 = (input[inOffset++] & 0xFF) | (input[inOffset++] & 0xFF) <<  8 | (input[inOffset++] & 0xFF) << 16 | (input[inOffset++] & 0xFF) << 24
-        , x1 = (input[inOffset++] & 0xFF) | (input[inOffset++] & 0xFF) <<  8 | (input[inOffset++] & 0xFF) << 16 | (input[inOffset++] & 0xFF) << 24;
+      var x2 = (input[inOffset++] & 0xFF) |
+               (input[inOffset++] & 0xFF) <<  8 |
+               (input[inOffset++] & 0xFF) << 16 |
+               (input[inOffset++] & 0xFF) << 24
+
+        , x3 = (input[inOffset++] & 0xFF) |
+               (input[inOffset++] & 0xFF) <<  8 |
+               (input[inOffset++] & 0xFF) << 16 |
+               (input[inOffset++] & 0xFF) << 24
+
+        , x0 = (input[inOffset++] & 0xFF) |
+               (input[inOffset++] & 0xFF) <<  8 |
+               (input[inOffset++] & 0xFF) << 16 |
+               (input[inOffset++] & 0xFF) << 24
+
+        , x1 = (input[inOffset++] & 0xFF) |
+               (input[inOffset++] & 0xFF) <<  8 |
+               (input[inOffset++] & 0xFF) << 16 |
+               (input[inOffset++] & 0xFF) << 24;
 
       x2 ^= sKey[OUTPUT_WHITEN];
       x3 ^= sKey[OUTPUT_WHITEN + 1];
@@ -505,7 +557,8 @@ function twoFish() {
       x2 ^= sKey[INPUT_WHITEN + 2];
       x3 ^= sKey[INPUT_WHITEN + 3];
 
-      return new Uint8Array([ x0, (x0 >>> 8), (x0 >>> 16), (x0 >>> 24),
+      return new Uint8Array([
+        x0, (x0 >>> 8), (x0 >>> 16), (x0 >>> 24),
         x1, (x1 >>> 8), (x1 >>> 16), (x1 >>> 24),
         x2, (x2 >>> 8), (x2 >>> 16), (x2 >>> 24),
         x3, (x3 >>> 8), (x3 >>> 16), (x3 >>> 24)
@@ -546,7 +599,7 @@ function twoFish() {
     };
 
     console.log('pt:', pt, '\r\nct: ', ct, '\r\nctp : ', cpt);
-    ok = areEqual(pt, cpt);
+    ok = utils.areEqual(pt, cpt);
     return ok;
   }
   , selfTest = function(keysize) {
@@ -566,15 +619,106 @@ function twoFish() {
     var ct = blockEncrypt(pt, 0, key);
     var cpt = blockDecrypt(ct, 0, key);
 
-    ok = areEqual(pt, cpt);
+    ok = utils.areEqual(pt, cpt);
     return ok;
   };
 
   return {
+    BLOCK_SIZE : BLOCK_SIZE,
     makeKey : makeKey,
     blockEncrypt : blockEncrypt,
     blockDecrypt : blockDecrypt,
     selfTest : selfTest,
     test : test
   };
+}
+
+function RNG(seed) {
+  this.m = 0x80000000; // 2**31;
+  this.a = 1103515245;
+  this.c = 12345;
+
+  this.state = seed ? seed : Math.floor(Math.random() * (this.m-1));
+}
+
+RNG.prototype.nextInt = function() {
+  this.state = (this.a * this.state + this.c) % this.m;
+  return this.state;
+}
+
+RNG.prototype.nextFloat = function() {
+  // returns in range [0,1]
+  return this.nextInt() / (this.m - 1);
+}
+
+RNG.prototype.nextRange = function(start, end) {
+  // returns in range [start, end): including start, excluding end
+  // can't modulu nextInt because of weak randomness in lower bits
+  var rangeSize = end - start;
+  var randomUnder1 = this.nextInt() / this.m;
+  return start + Math.floor(randomUnder1 * rangeSize);
+}
+
+RNG.prototype.choice = function(array) {
+  return array[this.nextRange(0, array.length)];
+}
+
+function twoFishCBC(IV) {
+  var rng = new RNG()
+    , utils = functionUtils()
+    , initializingVector = undefined
+    , twoFishBlockSize = twoFishECB().BLOCK_SIZE
+
+  if (IV && utils.isAnArray(IV) && IV.length === 16) {
+
+    initializingVector = new Uint8Array(IV);
+  } else if (!IV) {
+
+    var iv = [];
+    for (var i = 0; i < 16; i++) {
+
+      iv.push(rng.nextRange(0, 256));
+    };
+    initializingVector = new Uint8Array(iv);
+  } else if (IV && (
+      !utils.isAnArray(IV) || (IV.length < 16 || IV.length > 16)
+      )) {
+
+    throw 'Initlializing vector incorrect';
+  };
+
+  var encrypt = function(input) {
+    if (input && utils.isAnArray(input)) {
+      var result = []
+        , loops = input.length / twoFishBlockSize
+        , start = 0
+        , pos = 0
+        , cBuffer = []
+        , buffer1 = []
+        , buffer2 = [];
+
+      for (var i = 0; i < loops; i++) {
+
+        var sliceStart = start + pos;
+        cBuffer = input.slice(sliceStart, sliceStart + twoFishBlockSize);
+    /*  // XOR user block with vector and encrypt result
+        buf1 = Util.XOR_buffers( cbuf, vector );
+        buf2 = cipher.encrypt( buf1 );
+
+        // save results of this encryption loop
+        System.arraycopy( buf2, 0, result, pos, blocksize );
+        vector = buf2;
+
+        // propagate pointer
+        pos += blocksize;*/
+      };
+    /*return result;*/
+    };
+  };
+
+
+
+    return {
+      encrypt : encrypt
+    }
 }
