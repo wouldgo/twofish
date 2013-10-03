@@ -751,7 +751,7 @@ function twoFishCBC(IV) {
 
         for (var d = pos; d < buffer2.length + pos; d++) {
           var position = d - pos;
-          if (buffer2[position]) {
+          if (buffer2[position] !== undefined) {
 
             result.splice(d, 0, buffer2[position]);
           };
@@ -785,7 +785,7 @@ function twoFishCBC(IV) {
 
         for (var d = pos; d < plain.length + pos; d++) {
           var position = d - pos;
-          if (plain[position]) {
+          if (plain[position] !== undefined) {
 
             result.splice(d, 0, plain[position]);
           };
