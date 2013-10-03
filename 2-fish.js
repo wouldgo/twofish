@@ -1,3 +1,5 @@
+'use strict';
+
 function functionUtils() {
   var isAnArray = function(someVar) {
     if( Object.prototype.toString.call( someVar ) === '[object Array]' ||
@@ -5,30 +7,30 @@ function functionUtils() {
       return true;
     } else {
       return false;
-    };
-  }
-  , areEqual = function(first, second) {
+    }
+  },
+  areEqual = function(first, second) {
     var firstLength = first.length,
       secondLength = second.length;
 
     if (firstLength > secondLength) {
-      var diff = firstLength - secondLength;
-      for (; diff >= 0; diff -= 1) {
-        if (first[firstLength - diff]) {
+      var fsDiff = firstLength - secondLength;
+      for (; fsDiff >= 0; fsDiff -= 1) {
+        if (first[firstLength - fsDiff]) {
           return false;
         }
       }
     } else if (secondLength > firstLength) {
-      var diff = secondLength - firstLength;
-      for (; diff >= 0; diff -= 1) {
-        if (second[secondLength - diff]) {
+      var sfDiff = secondLength - firstLength;
+      for (; sfDiff >= 0; sfDiff -= 1) {
+        if (second[secondLength - sfDiff]) {
           return false;
         }
       }
     }
 
-    for (var i = 0; i < firstLength; i++) {
-      if (first[i] != second[i]) {
+    for (var i = 0; i < firstLength; i += 1) {
+      if (first[i] !== second[i]) {
         return false;
       }
     }
@@ -42,9 +44,9 @@ function functionUtils() {
 }
 
 function twoFishECB() {
-  var utils = functionUtils()
+  var utils = functionUtils(),
   // S-boxes
-  , P0 = new Uint8Array([
+  P0 = new Uint8Array([
     0xA9, 0x67, 0xB3, 0xE8,
     0x04, 0xFD, 0xA3, 0x76,
     0x9A, 0x92, 0x80, 0x78,
@@ -109,8 +111,8 @@ function twoFishECB() {
     0xD3, 0x5D, 0x0F, 0x00,
     0x6F, 0x9D, 0x36, 0x42,
     0x4A, 0x5E, 0xC1, 0xE0
-    ])
-  , P1 = new Uint8Array([
+  ]),
+  P1 = new Uint8Array([
     0x75, 0xF3, 0xC6, 0xF4,
     0xDB, 0x7B, 0xFB, 0xC8,
     0x4A, 0xD3, 0xE6, 0x6B,
@@ -175,82 +177,80 @@ function twoFishECB() {
     0x50, 0x04, 0xF6, 0xC2,
     0x16, 0x25, 0x86, 0x56,
     0x55, 0x09, 0xBE, 0x91
-    ])
-  , P = [P0, P1]
-  , BLOCK_SIZE = 16
-  , ROUNDS = 16
-  , MAX_ROUNDS = 16
-  , SK_STEP = 0x02020202
-  , SK_BUMP = 0x01010101
-  , SK_ROTL = 9
-  , INPUT_WHITEN = 0
-  , OUTPUT_WHITEN = INPUT_WHITEN +  BLOCK_SIZE/4
-  , ROUND_SUBKEYS = OUTPUT_WHITEN + BLOCK_SIZE/4 // 2*(# rounds)
-  , TOTAL_SUBKEYS = ROUND_SUBKEYS + 2*MAX_ROUNDS;
+  ]),
+  P = [P0, P1],
+  BLOCK_SIZE = 16,
+  ROUNDS = 16,
+  SK_STEP = 0x02020202,
+  SK_BUMP = 0x01010101,
+  SK_ROTL = 9,
+  INPUT_WHITEN = 0,
+  OUTPUT_WHITEN = INPUT_WHITEN +  BLOCK_SIZE/4,
+  ROUND_SUBKEYS = OUTPUT_WHITEN + BLOCK_SIZE/4; // 2*(# rounds)
 
   // Fixed p0/p1 permutations used in S-box lookup.
   // Change the following constant definitions, then S-boxes will automatically get changed.
-  var P_00 = 1
-  , P_01 = 0
-  , P_02 = 0
-  , P_03 = P_01 ^ 1
-  , P_04 = 1
+  var P_00 = 1,
+  P_01 = 0,
+  P_02 = 0,
+  P_03 = P_01 ^ 1,
+  P_04 = 1,
 
-  , P_10 = 0
-  , P_11 = 0
-  , P_12 = 1
-  , P_13 = P_11 ^ 1
-  , P_14 = 0
+  P_10 = 0,
+  P_11 = 0,
+  P_12 = 1,
+  P_13 = P_11 ^ 1,
+  P_14 = 0,
 
-  , P_20 = 1
-  , P_21 = 1
-  , P_22 = 0
-  , P_23 = P_21 ^ 1
-  , P_24 = 0
+  P_20 = 1,
+  P_21 = 1,
+  P_22 = 0,
+  P_23 = P_21 ^ 1,
+  P_24 = 0,
 
-  , P_30 = 0
-  , P_31 = 1
-  , P_32 = 1
-  , P_33 = P_31 ^ 1
-  , P_34 = 1
+  P_30 = 0,
+  P_31 = 1,
+  P_32 = 1,
+  P_33 = P_31 ^ 1,
+  P_34 = 1,
 
-  , GF256_FDBK = 0x169
-  , GF256_FDBK_2 = 0x169 / 2
-  , GF256_FDBK_4 = 0x169 / 4
-  , RS_GF_FDBK = 0x14D
+  GF256_FDBK_2 = 0x169 / 2,
+  GF256_FDBK_4 = 0x169 / 4,
+  RS_GF_FDBK = 0x14D,
 
-  , LFSR1 = function(x) {
-    return (x >> 1) ^ ((x & 0x01) != 0 ? GF256_FDBK_2 : 0);
-  }
-  , LFSR2 = function(x) {
-    return (x >> 2) ^ ((x & 0x02) != 0 ? GF256_FDBK_2 : 0) ^ ((x & 0x01) != 0 ? GF256_FDBK_4 : 0);
-  }
-  , Mx_1 = function(x) {
-    return x;
-  }
-  , Mx_X = function(x) {
+  LFSR1 = function(x) {
+    return (x >> 1) ^
+      ((x & 0x01) !== 0 ? GF256_FDBK_2 : 0);
+  },
+  LFSR2 = function(x) {
+    return (x >> 2) ^
+      ((x & 0x02) !== 0 ? GF256_FDBK_2 : 0) ^
+      ((x & 0x01) !== 0 ? GF256_FDBK_4 : 0);
+  },
+  mxX = function(x) {
     return x ^ LFSR2(x);
-  }
-  , Mx_Y = function(x) {
+  },
+  mxY = function(x) {
     return x ^ LFSR1(x) ^ LFSR2(x);
-  }
-  , MDS = function() {
-    var localMDS = [[],[],[],[]]
-      , m1 = []
-      , mX = []
-      , mY = []
-      , i
-      , j;
-    for (i = 0; i < 256; i++) {
+  },
+  MDS = (function() {
+    var localMDS = [[],[],[],[]],
+    m1 = [],
+    mX = [],
+    mY = [],
+    i,
+    j;
+
+    for (i = 0; i < 256; i += 1) {
       j = P[0][i] & 0xFF;
       m1[0] = j;
-      mX[0] = Mx_X(j) & 0xFF;
-      mY[0] = Mx_Y(j) & 0xFF;
+      mX[0] = mxX(j) & 0xFF;
+      mY[0] = mxY(j) & 0xFF;
 
       j = P[1][i] & 0xFF;
       m1[1] = j;
-      mX[1] = Mx_X(j) & 0xFF;
-      mY[1] = Mx_Y(j) & 0xFF;
+      mX[1] = mxX(j) & 0xFF;
+      mY[1] = mxY(j) & 0xFF;
 
       localMDS[0][i] = m1[P_00] <<  0 | mX[P_00] <<  8 | mY[P_00] << 16 | mY[P_00] << 24;
       localMDS[1][i] = mY[P_10] <<  0 | mY[P_10] <<  8 | mX[P_10] << 16 | m1[P_10] << 24;
@@ -259,92 +259,110 @@ function twoFishECB() {
     }
 
     return localMDS;
-  }()
+  })(),
 
-  , b0 = function(x) {
+  b0 = function(x) {
     return  x & 0xFF;
-  }
-  , b1 = function(x) {
+  },
+  b1 = function(x) {
     return (x >>> 8) & 0xFF;
-  }
-  , b2 = function(x) {
+  },
+  b2 = function(x) {
     return (x >>> 16) & 0xFF;
-  }
-  , b3 = function(x) {
+  },
+  b3 = function(x) {
     return (x >>> 24) & 0xFF;
-  }
-  , _b = function(x, N) {
+  },
+  _b = function(x, N) {
     var result = 0;
     switch (N%4) {
-      case 0: result = b0(x); break;
-      case 1: result = b1(x); break;
-      case 2: result = b2(x); break;
-      case 3: result = b3(x); break;
+    case 0:
+      result = b0(x);
+      break;
+    case 1:
+      result = b1(x);
+      break;
+    case 2:
+      result = b2(x);
+      break;
+    case 3:
+      result = b3(x);
+      break;
     }
     return result;
-  }
-  , RS_rem = function(x) {
-    var b  =  (x >>> 24) & 0xFF
-      , g2 = ((b << 1) ^ ( (b & 0x80) != 0 ? RS_GF_FDBK : 0 )) & 0xFF
-      , g3 =  (b >>> 1) ^ ( (b & 0x01) != 0 ? (RS_GF_FDBK >>> 1) : 0 ) ^ g2
-      , result = (x << 8) ^ (g3 << 24) ^ (g2 << 16) ^ (g3 << 8) ^ b;
+  },
+  rsRem = function(x) {
+    var b  =  (x >>> 24) & 0xFF,
+    g2 = ((b << 1) ^
+      ((b & 0x80) !== 0 ? RS_GF_FDBK : 0 )) & 0xFF,
+    g3 =  (b >>> 1) ^
+      ((b & 0x01) !== 0 ? (RS_GF_FDBK >>> 1) : 0 ) ^
+      g2,
+    result = (x << 8) ^
+      (g3 << 24) ^
+      (g2 << 16) ^
+      (g3 << 8) ^
+      b;
     return new Uint32Array([result])[0];
-  }
-  , RS_MDS_Encode = function(k0, k1) {
-    var realK0 = k0[0]
-      , realK1 = k1[0];
+  },
+  rsMDSEncode = function(k0, k1) {
+    var realK0 = k0[0],
+    realK1 = k1[0],
+    i;
 
-    for (var i = 0; i < 4; i++) {
-      realK1 = RS_rem(realK1);
+    for (i = 0; i < 4; i += 1) {
+      realK1 = rsRem(realK1);
     }
     realK1 ^= realK0;
-    for (var i = 0; i < 4; i++) {
-     realK1 = RS_rem(realK1);
+    for (i = 0; i < 4; i += 1) {
+      realK1 = rsRem(realK1);
     }
 
     return new Uint32Array([realK1])[0];
-  }
-  , F32 = function(k64Cnt, x, k32 ) {
-    var realK64Cnt = k64Cnt[0]
-      , realX = x[0]
-      , lB0 = b0(realX)
-      , lB1 = b1(realX)
-      , lB2 = b2(realX)
-      , lB3 = b3(realX)
-      , k0 = k32[0]
-      , k1 = k32[1]
-      , k2 = k32[2]
-      , k3 = k32[3]
-      , result = 0;
+  },
+  F32 = function(k64Cnt, x, k32 ) {
+    var realK64Cnt = k64Cnt[0],
+    realX = x[0],
+    lB0 = b0(realX),
+    lB1 = b1(realX),
+    lB2 = b2(realX),
+    lB3 = b3(realX),
+    k0 = k32[0],
+    k1 = k32[1],
+    k2 = k32[2],
+    k3 = k32[3],
+    result = 0;
 
     switch (realK64Cnt & 3) {
-      case 1:
-        result = MDS[0][(P[P_01][lB0] & 0xFF) ^ b0(k0)] ^
-                 MDS[1][(P[P_11][lB1] & 0xFF) ^ b1(k0)] ^
-                 MDS[2][(P[P_21][lB2] & 0xFF) ^ b2(k0)] ^
-                 MDS[3][(P[P_31][lB3] & 0xFF) ^ b3(k0)];
-        break;
-      case 0:  // same as 4
-        lB0 = (P[P_04][lB0] & 0xFF) ^ b0(k3);
-        lB1 = (P[P_14][lB1] & 0xFF) ^ b1(k3);
-        lB2 = (P[P_24][lB2] & 0xFF) ^ b2(k3);
-        lB3 = (P[P_34][lB3] & 0xFF) ^ b3(k3);
-      case 3:
-        lB0 = (P[P_03][lB0] & 0xFF) ^ b0(k2);
-        lB1 = (P[P_13][lB1] & 0xFF) ^ b1(k2);
-        lB2 = (P[P_23][lB2] & 0xFF) ^ b2(k2);
-        lB3 = (P[P_33][lB3] & 0xFF) ^ b3(k2);
-      case 2:
-        result = MDS[0][(P[P_01][(P[P_02][lB0] & 0xFF) ^ b0(k1)] & 0xFF) ^ b0(k0)] ^
-                 MDS[1][(P[P_11][(P[P_12][lB1] & 0xFF) ^ b1(k1)] & 0xFF) ^ b1(k0)] ^
-                 MDS[2][(P[P_21][(P[P_22][lB2] & 0xFF) ^ b2(k1)] & 0xFF) ^ b2(k0)] ^
-                 MDS[3][(P[P_31][(P[P_32][lB3] & 0xFF) ^ b3(k1)] & 0xFF) ^ b3(k0)];
+    case 1:
+      result = MDS[0][(P[P_01][lB0] & 0xFF) ^ b0(k0)] ^
+               MDS[1][(P[P_11][lB1] & 0xFF) ^ b1(k0)] ^
+               MDS[2][(P[P_21][lB2] & 0xFF) ^ b2(k0)] ^
+               MDS[3][(P[P_31][lB3] & 0xFF) ^ b3(k0)];
+      break;
+    case 0:  // same as 4
+      lB0 = (P[P_04][lB0] & 0xFF) ^ b0(k3);
+      lB1 = (P[P_14][lB1] & 0xFF) ^ b1(k3);
+      lB2 = (P[P_24][lB2] & 0xFF) ^ b2(k3);
+      lB3 = (P[P_34][lB3] & 0xFF) ^ b3(k3);
+      /* falls through */
+    case 3:
+      lB0 = (P[P_03][lB0] & 0xFF) ^ b0(k2);
+      lB1 = (P[P_13][lB1] & 0xFF) ^ b1(k2);
+      lB2 = (P[P_23][lB2] & 0xFF) ^ b2(k2);
+      lB3 = (P[P_33][lB3] & 0xFF) ^ b3(k2);
+      /* falls through */
+    case 2:
+      result = MDS[0][(P[P_01][(P[P_02][lB0] & 0xFF) ^ b0(k1)] & 0xFF) ^ b0(k0)] ^
+               MDS[1][(P[P_11][(P[P_12][lB1] & 0xFF) ^ b1(k1)] & 0xFF) ^ b1(k0)] ^
+               MDS[2][(P[P_21][(P[P_22][lB2] & 0xFF) ^ b2(k1)] & 0xFF) ^ b2(k0)] ^
+               MDS[3][(P[P_31][(P[P_32][lB3] & 0xFF) ^ b3(k1)] & 0xFF) ^ b3(k0)];
       break;
     }
 
     return new Uint32Array([result])[0];
-  }
-  , Fe32 = function(sBox, x, R) {
+  },
+  fe32 = function(sBox, x, R) {
     var toReturn = sBox[2*_b(x, R)] ^
                    sBox[2*_b(x, R+1) + 1] ^
                    sBox[0x200 + 2*_b(x, R+2)] ^
@@ -357,36 +375,42 @@ function twoFishECB() {
     aKey = new Uint8Array(aKey);
     if (aKey && utils.isAnArray(aKey)) {
       var keyLenght = aKey.length;
-      if (!(keyLenght == 8 || keyLenght == 16 || keyLenght == 24 || keyLenght == 32)) {
+      if (!(keyLenght === 8 || keyLenght === 16 || keyLenght === 24 || keyLenght === 32)) {
         throw 'Invalid key length';
       }
 
-      var k64Cnt = keyLenght / 8
-        , subkeyCnt = ROUND_SUBKEYS + 2*ROUNDS
-        , k32e = []
-        , k32o = []
-        , sBoxKey = []
-        , i
-        , j
-        , offset = 0
-        , q
-        , A
-        , B
-        , subKeys = []
-        , lB0
-        , lB1
-        , lB2
-        , lB3
-        , sBox = [];
+      var k64Cnt = keyLenght / 8,
+      subkeyCnt = ROUND_SUBKEYS + 2*ROUNDS,
+      k32e = [],
+      k32o = [],
+      sBoxKey = [],
+      i,
+      j,
+      offset = 0,
+      q,
+      A,
+      B,
+      subKeys = [],
+      lB0,
+      lB1,
+      lB2,
+      lB3,
+      sBox = [];
 
-      for (i = 0, j = k64Cnt-1; i < 4 && offset < keyLenght; i++, j--) {
-        k32e[i] = (aKey[offset++] & 0xFF) | (aKey[offset++] & 0xFF) <<  8 | (aKey[offset++] & 0xFF) << 16 | (aKey[offset++] & 0xFF) << 24;
-        k32o[i] = (aKey[offset++] & 0xFF) | (aKey[offset++] & 0xFF) <<  8 | (aKey[offset++] & 0xFF) << 16 | (aKey[offset++] & 0xFF) << 24;
-        sBoxKey[j] = RS_MDS_Encode(new Uint32Array([k32e[i]]), new Uint32Array([k32o[i]]));
+      for (i = 0, j = k64Cnt-1; i < 4 && offset < keyLenght; i += 1, j -= 1) {
+        k32e[i] = (aKey[offset += 1] & 0xFF) |
+          (aKey[offset += 1] & 0xFF) <<  8 |
+          (aKey[offset += 1] & 0xFF) << 16 |
+          (aKey[offset += 1] & 0xFF) << 24;
+        k32o[i] = (aKey[offset += 1] & 0xFF) |
+          (aKey[offset += 1] & 0xFF) <<  8 |
+          (aKey[offset += 1] & 0xFF) << 16 |
+          (aKey[offset += 1] & 0xFF) << 24;
+        sBoxKey[j] = rsMDSEncode(new Uint32Array([k32e[i]]), new Uint32Array([k32o[i]]));
       }
       sBoxKey = new Uint32Array(sBoxKey);
 
-      for (i = q = 0; i < subkeyCnt/2; i++, q += SK_STEP) {
+      for (i = q = 0; i < subkeyCnt/2; i += 1, q += SK_STEP) {
         A = F32(new Uint32Array([k64Cnt]), new Uint32Array([q]), new Uint32Array([k32e]));
         B = F32(new Uint32Array([k64Cnt]), new Uint32Array([q+SK_BUMP]), new Uint32Array([k32o]));
         B = B << 8 | B >>> 24;
@@ -397,162 +421,167 @@ function twoFishECB() {
       }
       subKeys = new Uint32Array(subKeys);
 
-      var k0 = sBoxKey[0]
-        , k1 = sBoxKey[1]
-        , k2 = sBoxKey[2]
-        , k3 = sBoxKey[3];
+      var k0 = sBoxKey[0],
+      k1 = sBoxKey[1],
+      k2 = sBoxKey[2],
+      k3 = sBoxKey[3];
 
-      for (i = 0; i < 256; i++) {
+      for (i = 0; i < 256; i += 1) {
         lB0 = lB1 = lB2 = lB3 = i;
         switch (k64Cnt & 3) {
-          case 1:
-            sBox[2*i] = MDS[0][(P[P_01][lB0] & 0xFF) ^ b0(k0)];
-            sBox[2*i+1] = MDS[1][(P[P_11][lB1] & 0xFF) ^ b1(k0)];
-            sBox[0x200+2*i] = MDS[2][(P[P_21][lB2] & 0xFF) ^ b2(k0)];
-            sBox[0x200+2*i+1] = MDS[3][(P[P_31][lB3] & 0xFF) ^ b3(k0)];
-            break;
-          case 0:
-            lB0 = (P[P_04][lB0] & 0xFF) ^ b0(k3);
-            lB1 = (P[P_14][lB1] & 0xFF) ^ b1(k3);
-            lB2 = (P[P_24][lB2] & 0xFF) ^ b2(k3);
-            lB3 = (P[P_34][lB3] & 0xFF) ^ b3(k3);
-          case 3:
-            lB0 = (P[P_03][lB0] & 0xFF) ^ b0(k2);
-            lB1 = (P[P_13][lB1] & 0xFF) ^ b1(k2);
-            lB2 = (P[P_23][lB2] & 0xFF) ^ b2(k2);
-            lB3 = (P[P_33][lB3] & 0xFF) ^ b3(k2);
-          case 2:
-            sBox[2*i] = MDS[0][(P[P_01][(P[P_02][lB0] & 0xFF) ^ b0(k1)] & 0xFF) ^ b0(k0)];
-            sBox[2*i+1] = MDS[1][(P[P_11][(P[P_12][lB1] & 0xFF) ^ b1(k1)] & 0xFF) ^ b1(k0)];
-            sBox[0x200+2*i] = MDS[2][(P[P_21][(P[P_22][lB2] & 0xFF) ^ b2(k1)] & 0xFF) ^ b2(k0)];
-            sBox[0x200+2*i+1] = MDS[3][(P[P_31][(P[P_32][lB3] & 0xFF) ^ b3(k1)] & 0xFF) ^ b3(k0)];
+        case 1:
+          sBox[2*i] = MDS[0][(P[P_01][lB0] & 0xFF) ^
+            b0(k0)];
+          sBox[2*i+1] = MDS[1][(P[P_11][lB1] & 0xFF) ^
+            b1(k0)];
+          sBox[0x200+2*i] = MDS[2][(P[P_21][lB2] & 0xFF) ^
+            b2(k0)];
+          sBox[0x200+2*i+1] = MDS[3][(P[P_31][lB3] & 0xFF) ^
+            b3(k0)];
+          break;
+        case 0:
+          lB0 = (P[P_04][lB0] & 0xFF) ^ b0(k3);
+          lB1 = (P[P_14][lB1] & 0xFF) ^ b1(k3);
+          lB2 = (P[P_24][lB2] & 0xFF) ^ b2(k3);
+          lB3 = (P[P_34][lB3] & 0xFF) ^ b3(k3);
+          /* falls through */
+        case 3:
+          lB0 = (P[P_03][lB0] & 0xFF) ^ b0(k2);
+          lB1 = (P[P_13][lB1] & 0xFF) ^ b1(k2);
+          lB2 = (P[P_23][lB2] & 0xFF) ^ b2(k2);
+          lB3 = (P[P_33][lB3] & 0xFF) ^ b3(k2);
+          /* falls through */
+        case 2:
+          sBox[2*i] = MDS[0][(P[P_01][(P[P_02][lB0] & 0xFF) ^ b0(k1)] & 0xFF) ^ b0(k0)];
+          sBox[2*i+1] = MDS[1][(P[P_11][(P[P_12][lB1] & 0xFF) ^ b1(k1)] & 0xFF) ^ b1(k0)];
+          sBox[0x200+2*i] = MDS[2][(P[P_21][(P[P_22][lB2] & 0xFF) ^ b2(k1)] & 0xFF) ^ b2(k0)];
+          sBox[0x200+2*i+1] = MDS[3][(P[P_31][(P[P_32][lB3] & 0xFF) ^ b3(k1)] & 0xFF) ^ b3(k0)];
         }
       }
 
       return [new Uint32Array(sBox), subKeys];
     } else {
       throw 'key passed is undefined or not an array';
-    };
+    }
   };
 
   var blockEncrypt = function(input, inOffset, sessionKey) {
     if (input && sessionKey && utils.isAnArray(sessionKey) && utils.isAnArray(input)) {
       input = new Uint8Array(input);
-      var sBox = sessionKey[0]
-        , sKey = sessionKey[1];
+      var sBox = sessionKey[0],
+      sKey = sessionKey[1],
+      x0 = (input[inOffset += 1] & 0xFF) |
+           (input[inOffset += 1] & 0xFF) <<  8 |
+           (input[inOffset += 1] & 0xFF) << 16 |
+           (input[inOffset += 1] & 0xFF) << 24,
 
-      var x0 = (input[inOffset++] & 0xFF) |
-               (input[inOffset++] & 0xFF) <<  8 |
-               (input[inOffset++] & 0xFF) << 16 |
-               (input[inOffset++] & 0xFF) << 24
+      x1 = (input[inOffset += 1] & 0xFF) |
+           (input[inOffset += 1] & 0xFF) <<  8 |
+           (input[inOffset += 1] & 0xFF) << 16 |
+           (input[inOffset += 1] & 0xFF) << 24,
 
-        , x1 = (input[inOffset++] & 0xFF) |
-               (input[inOffset++] & 0xFF) <<  8 |
-               (input[inOffset++] & 0xFF) << 16 |
-               (input[inOffset++] & 0xFF) << 24
+      x2 = (input[inOffset += 1] & 0xFF) |
+           (input[inOffset += 1] & 0xFF) <<  8 |
+           (input[inOffset += 1] & 0xFF) << 16 |
+           (input[inOffset += 1] & 0xFF) << 24,
 
-        , x2 = (input[inOffset++] & 0xFF) |
-               (input[inOffset++] & 0xFF) <<  8 |
-               (input[inOffset++] & 0xFF) << 16 |
-               (input[inOffset++] & 0xFF) << 24
-
-        , x3 = (input[inOffset++] & 0xFF) |
-               (input[inOffset++] & 0xFF) <<  8 |
-               (input[inOffset++] & 0xFF) << 16 |
-               (input[inOffset++] & 0xFF) << 24
+      x3 = (input[inOffset += 1] & 0xFF) |
+           (input[inOffset += 1] & 0xFF) <<  8 |
+           (input[inOffset += 1] & 0xFF) << 16 |
+           (input[inOffset += 1] & 0xFF) << 24;
 
       x0 ^= sKey[INPUT_WHITEN];
       x1 ^= sKey[INPUT_WHITEN + 1];
       x2 ^= sKey[INPUT_WHITEN + 2];
       x3 ^= sKey[INPUT_WHITEN + 3];
 
-      var t0
-        , t1
-        , k = ROUND_SUBKEYS;
+      var t0,
+      t1,
+      k = ROUND_SUBKEYS;
 
       for (var R = 0; R < ROUNDS; R += 2) {
-       t0 = Fe32(sBox, x0, 0);
-       t1 = Fe32(sBox, x1, 3);
-       x2 ^= t0 + t1 + sKey[k++];
-       x2 = x2 >>> 1 | x2 << 31;
-       x3 = x3 << 1 | x3 >>> 31;
-       x3 ^= t0 + 2*t1 + sKey[k++];
+        t0 = fe32(sBox, x0, 0);
+        t1 = fe32(sBox, x1, 3);
+        x2 ^= t0 + t1 + sKey[k += 1];
+        x2 = x2 >>> 1 | x2 << 31;
+        x3 = x3 << 1 | x3 >>> 31;
+        x3 ^= t0 + 2*t1 + sKey[k += 1];
 
-       t0 = Fe32(sBox, x2, 0);
-       t1 = Fe32(sBox, x3, 3);
-       x0 ^= t0 + t1 + sKey[k++];
-       x0 = x0 >>> 1 | x0 << 31;
-       x1 = x1 << 1 | x1 >>> 31;
-       x1 ^= t0 + 2*t1 + sKey[k++];
-     }
-
-     x2 ^= sKey[OUTPUT_WHITEN];
-     x3 ^= sKey[OUTPUT_WHITEN + 1];
-     x0 ^= sKey[OUTPUT_WHITEN + 2];
-     x1 ^= sKey[OUTPUT_WHITEN + 3];
-
-    return new Uint8Array(
-      [ x2, (x2 >>> 8), (x2 >>> 16), (x2 >>> 24),
-        x3, (x3 >>> 8), (x3 >>> 16), (x3 >>> 24),
-        x0, (x0 >>> 8), (x0 >>> 16), (x0 >>> 24),
-        x1, (x1 >>> 8), (x1 >>> 16), (x1 >>> 24)
-      ]);
-    } else {
-      throw 'input block is not an array or sessionKey is incorrect';
-    };
-  };
-
-  var blockDecrypt = function(input, inOffset, sessionKey) {
-    if (input && sessionKey && utils.isAnArray(sessionKey) && utils.isAnArray(input)) {
-      var sBox = sessionKey[0]
-        , sKey = sessionKey[1];
-
-      var x2 = (input[inOffset++] & 0xFF) |
-               (input[inOffset++] & 0xFF) <<  8 |
-               (input[inOffset++] & 0xFF) << 16 |
-               (input[inOffset++] & 0xFF) << 24
-
-        , x3 = (input[inOffset++] & 0xFF) |
-               (input[inOffset++] & 0xFF) <<  8 |
-               (input[inOffset++] & 0xFF) << 16 |
-               (input[inOffset++] & 0xFF) << 24
-
-        , x0 = (input[inOffset++] & 0xFF) |
-               (input[inOffset++] & 0xFF) <<  8 |
-               (input[inOffset++] & 0xFF) << 16 |
-               (input[inOffset++] & 0xFF) << 24
-
-        , x1 = (input[inOffset++] & 0xFF) |
-               (input[inOffset++] & 0xFF) <<  8 |
-               (input[inOffset++] & 0xFF) << 16 |
-               (input[inOffset++] & 0xFF) << 24;
+        t0 = fe32(sBox, x2, 0);
+        t1 = fe32(sBox, x3, 3);
+        x0 ^= t0 + t1 + sKey[k += 1];
+        x0 = x0 >>> 1 | x0 << 31;
+        x1 = x1 << 1 | x1 >>> 31;
+        x1 ^= t0 + 2*t1 + sKey[k += 1];
+      }
 
       x2 ^= sKey[OUTPUT_WHITEN];
       x3 ^= sKey[OUTPUT_WHITEN + 1];
       x0 ^= sKey[OUTPUT_WHITEN + 2];
       x1 ^= sKey[OUTPUT_WHITEN + 3];
 
-      var k = ROUND_SUBKEYS + 2*ROUNDS - 1
-        , t0
-        , t1;
+      return new Uint8Array(
+        [ x2, (x2 >>> 8), (x2 >>> 16), (x2 >>> 24),
+          x3, (x3 >>> 8), (x3 >>> 16), (x3 >>> 24),
+          x0, (x0 >>> 8), (x0 >>> 16), (x0 >>> 24),
+          x1, (x1 >>> 8), (x1 >>> 16), (x1 >>> 24)
+        ]);
+    } else {
+      throw 'input block is not an array or sessionKey is incorrect';
+    }
+  };
+
+  var blockDecrypt = function(input, inOffset, sessionKey) {
+    if (input && sessionKey && utils.isAnArray(sessionKey) && utils.isAnArray(input)) {
+      var sBox = sessionKey[0],
+      sKey = sessionKey[1];
+
+      var x2 = (input[inOffset += 1] & 0xFF) |
+               (input[inOffset += 1] & 0xFF) <<  8 |
+               (input[inOffset += 1] & 0xFF) << 16 |
+               (input[inOffset += 1] & 0xFF) << 24,
+
+      x3 = (input[inOffset += 1] & 0xFF) |
+           (input[inOffset += 1] & 0xFF) <<  8 |
+           (input[inOffset += 1] & 0xFF) << 16 |
+           (input[inOffset += 1] & 0xFF) << 24,
+
+      x0 = (input[inOffset += 1] & 0xFF) |
+           (input[inOffset += 1] & 0xFF) <<  8 |
+           (input[inOffset += 1] & 0xFF) << 16 |
+           (input[inOffset += 1] & 0xFF) << 24,
+
+      x1 = (input[inOffset += 1] & 0xFF) |
+           (input[inOffset += 1] & 0xFF) <<  8 |
+           (input[inOffset += 1] & 0xFF) << 16 |
+           (input[inOffset += 1] & 0xFF) << 24;
+
+      x2 ^= sKey[OUTPUT_WHITEN];
+      x3 ^= sKey[OUTPUT_WHITEN + 1];
+      x0 ^= sKey[OUTPUT_WHITEN + 2];
+      x1 ^= sKey[OUTPUT_WHITEN + 3];
+
+      var k = ROUND_SUBKEYS + 2*ROUNDS - 1,
+      t0,
+      t1;
 
       for (var R = 0; R < ROUNDS; R += 2) {
-       t0 = Fe32(sBox, x2, 0);
-       t1 = Fe32(sBox, x3, 3);
-       x1 ^= t0 + 2*t1 + sKey[k--];
-       x1 = x1 >>> 1 | x1 << 31;
-       x0 = x0 << 1 | x0 >>> 31;
-       x0 ^= t0 + t1 + sKey[k--];
+        t0 = fe32(sBox, x2, 0);
+        t1 = fe32(sBox, x3, 3);
+        x1 ^= t0 + 2*t1 + sKey[k -= 1];
+        x1 = x1 >>> 1 | x1 << 31;
+        x0 = x0 << 1 | x0 >>> 31;
+        x0 ^= t0 + t1 + sKey[k -= 1];
 
-       t0 = Fe32(sBox, x0, 0);
-       t1 = Fe32(sBox, x1, 3);
-       x3 ^= t0 + 2*t1 + sKey[k--];
-       x3  = x3 >>> 1 | x3 << 31;
-       x2  = x2 << 1 | x2 >>> 31;
-       x2 ^= t0 + t1 + sKey[k--];
+        t0 = fe32(sBox, x0, 0);
+        t1 = fe32(sBox, x1, 3);
+        x3 ^= t0 + 2*t1 + sKey[k -= 1];
+        x3  = x3 >>> 1 | x3 << 31;
+        x2  = x2 << 1 | x2 >>> 31;
+        x2 ^= t0 + t1 + sKey[k -= 1];
       }
 
-      x0 ^= sKey[INPUT_WHITEN    ];
+      x0 ^= sKey[INPUT_WHITEN];
       x1 ^= sKey[INPUT_WHITEN + 1];
       x2 ^= sKey[INPUT_WHITEN + 2];
       x3 ^= sKey[INPUT_WHITEN + 3];
@@ -565,54 +594,54 @@ function twoFishECB() {
       ]);
     } else {
       throw 'input block is not an array or sessionKey is incorrect';
-    };
-  }
+    }
+  };
 
   var test = function(userKey, plainText) {
-    var ok = false
-      , kb = []
-      , pt = []
-      , i
-      , offset;
+    var ok = false,
+    kb = [],
+    pt = [],
+    i,
+    offset;
 
-    for (i = 0; i < userKey.length; ++i) {
-        kb.push(userKey.charCodeAt(i));
+    for (i = 0; i < userKey.length; i += 1) {
+      kb.push(userKey.charCodeAt(i));
     }
     var key = makeKey(kb);
 
-    for (i = 0; i < plainText.length; ++i) {
-        pt.push(plainText.charCodeAt(i));
+    for (i = 0; i < plainText.length; i += 1) {
+      pt.push(plainText.charCodeAt(i));
     }
 
     var ct = [];
 
     for (offset = 0; offset < pt.length; offset += 16) {
-      var tmpBlock = blockEncrypt(pt, offset, key);
-      ct.push.apply(ct, tmpBlock);
-    };
+      var ptTmpBlock = blockEncrypt(pt, offset, key);
+      ct.push.apply(ct, ptTmpBlock);
+    }
 
     var cpt = [];
 
     for (offset = 0; offset < ct.length; offset += 16) {
-      var tmpBlock = blockDecrypt(ct, offset, key);
-      cpt.push.apply(cpt, tmpBlock);
-    };
+      var ctTmpBlock = blockDecrypt(ct, offset, key);
+      cpt.push.apply(cpt, ctTmpBlock);
+    }
 
     console.log('pt:', pt, '\r\nct: ', ct, '\r\nctp : ', cpt);
     ok = utils.areEqual(pt, cpt);
     return ok;
-  }
-  , selfTest = function(keysize) {
-    var ok = false
-      , kb = []
-      , pt = []
-      , i;
+  },
+  selfTest = function(keysize) {
+    var ok = false,
+    kb = [],
+    pt = [],
+    i;
 
-    for (i = 0; i < keysize; i++) {
+    for (i = 0; i < keysize; i += 1) {
       kb[i] = i;
     }
 
-    for (i = 0; i < BLOCK_SIZE; i++) {
+    for (i = 0; i < BLOCK_SIZE; i += 1) {
       pt[i] = i;
     }
     var key = makeKey(kb);
@@ -644,38 +673,29 @@ function RNG(seed) {
 RNG.prototype.nextInt = function() {
   this.state = (this.a * this.state + this.c) % this.m;
   return this.state;
-}
-
-RNG.prototype.nextFloat = function() {
-  // returns in range [0,1]
-  return this.nextInt() / (this.m - 1);
-}
+};
 
 RNG.prototype.nextRange = function(start, end) {
-  // returns in range [start, end): including start, excluding end
-  // can't modulu nextInt because of weak randomness in lower bits
   var rangeSize = end - start;
   var randomUnder1 = this.nextInt() / this.m;
   return start + Math.floor(randomUnder1 * rangeSize);
-}
+};
 
-RNG.prototype.choice = function(array) {
-  return array[this.nextRange(0, array.length)];
-}
-
+/*jshint -W098 */
 function twoFishCBC(IV) {
-  var rng = new RNG()
-    , twoFishKey = [];
-  for (var i = 0; i < 32; i++) {
+  var rng = new RNG(),
+  twoFishKey = [];
+
+  for (var i = 0; i < 32; i += 1) {
 
     twoFishKey.push(rng.nextRange(0, 256));
-  };
+  }
   twoFishKey = new Uint8Array(twoFishKey);
 
-  var utils = functionUtils()
-    , initializingVector = undefined
-    , twoFish = twoFishECB()
-    , sessionKey = twoFish.makeKey(twoFishKey);
+  var utils = functionUtils(),
+  initializingVector,
+  twoFish = twoFishECB(),
+  sessionKey = twoFish.makeKey(twoFishKey);
 
   if (IV && utils.isAnArray(IV) && IV.length === 16) {
 
@@ -683,126 +703,125 @@ function twoFishCBC(IV) {
   } else if (!IV) {
 
     var iv = [];
-    for (var i = 0; i < 16; i++) {
+    for (var d = 0; d < 16; d += 1) {
 
       iv.push(rng.nextRange(0, 256));
-    };
+    }
     initializingVector = new Uint8Array(iv);
   } else if (IV && (
       !utils.isAnArray(IV) || (IV.length < 16 || IV.length > 16)
       )) {
 
     throw 'Initlializing vector incorrect';
-  };
+  }
 
-  var XORBuffers = function(a, b) {
+  var xorBuffers = function(a, b) {
     var res = [];
 
     if (a && b &&
       utils.isAnArray(a) && utils.isAnArray(b) &&
-      a.length != b.length) {
+      a.length !== b.length) {
 
       throw 'Buffer length must be equal';
     }
     a = new Uint8Array(a);
     b = new Uint8Array(b);
 
-    for (var i = 0; i < a.length; i++) {
+    for (var i = 0; i < a.length; i += 1) {
 
       res[i] = (a[i] ^ b[i]) & 0xFF;
     }
 
     return new Uint8Array(res);
-  }
-  , padArray = function(arrayInput) {
+  },
+  padArray = function(arrayInput) {
     if (arrayInput && utils.isAnArray(arrayInput)) {
 
       if (arrayInput.length < twoFish.BLOCK_SIZE) {
 
         var diff = twoFish.BLOCK_SIZE - arrayInput.length;
-        for (var i = 0; i < diff; i++) {
+        for (var i = 0; i < diff; i += 1) {
           arrayInput.push(0x00);
-        };
-      };
+        }
+      }
 
       return arrayInput;
     } else {
 
       throw 'Input is not an array';
-    };
-  }
-  , encrypt = function(input) {
+    }
+  },
+  encrypt = function(input) {
     if (input && utils.isAnArray(input)) {
-      var input = padArray(input)
-        , result = []
-        , loops = input.length / twoFish.BLOCK_SIZE
-        , pos = 0
-        , cBuffer = []
-        , buffer1 = []
-        , buffer2 = []
-        , vector = initializingVector;
+      var realInput = padArray(input),
+      result = [],
+      loops = realInput.length / twoFish.BLOCK_SIZE,
+      pos = 0,
+      cBuffer = [],
+      buffer1 = [],
+      buffer2 = [],
+      vector = initializingVector;
 
-      for (var i = 0; i < loops; i++) {
+      for (var i = 0; i < loops; i += 1) {
 
-        cBuffer = input.slice(pos, pos + twoFish.BLOCK_SIZE);
+        cBuffer = realInput.slice(pos, pos + twoFish.BLOCK_SIZE);
         cBuffer = padArray(cBuffer);
-        buffer1 = XORBuffers(cBuffer, vector);
+        buffer1 = xorBuffers(cBuffer, vector);
         buffer2 = twoFish.blockEncrypt(buffer1, 0, sessionKey);
 
-        for (var d = pos; d < buffer2.length + pos; d++) {
+        for (var d = pos; d < buffer2.length + pos; d += 1) {
           var position = d - pos;
           if (buffer2[position] !== undefined) {
 
             result.splice(d, 0, buffer2[position]);
-          };
-        };
+          }
+        }
         vector = buffer2;
         pos += twoFish.BLOCK_SIZE;
-      };
+      }
       return result;
     } else {
 
       throw 'Input passed is not an array';
-    };
-  }
-  , decrypt = function(input) {
+    }
+  },
+  decrypt = function(input) {
     if (input && utils.isAnArray(input)) {
-      var input = padArray(input)
-        , result = []
-        , loops = input.length / twoFish.BLOCK_SIZE
-        , pos = 0
-        , cBuffer = []
-        , buffer1 = []
-        , plain = []
-        , vector = initializingVector;
+      var realInput = padArray(input),
+      result = [],
+      loops = realInput.length / twoFish.BLOCK_SIZE,
+      pos = 0,
+      cBuffer = [],
+      buffer1 = [],
+      plain = [],
+      vector = initializingVector;
 
-      for (var i = 0; i < loops; i++) {
-
-        cBuffer = input.slice(pos, pos + twoFish.BLOCK_SIZE);
+      for (var i = 0; i < loops; i += 1) {
+        cBuffer = realInput.slice(pos, pos + twoFish.BLOCK_SIZE);
         cBuffer = padArray(cBuffer);
         buffer1 = twoFish.blockDecrypt(cBuffer, 0, sessionKey);
-        plain = XORBuffers(buffer1, vector);
+        plain = xorBuffers(buffer1, vector);
 
-        for (var d = pos; d < plain.length + pos; d++) {
+        for (var d = pos; d < plain.length + pos; d += 1) {
           var position = d - pos;
           if (plain[position] !== undefined) {
 
             result.splice(d, 0, plain[position]);
-          };
-        };
+          }
+        }
         plain = [];
         vector = cBuffer;
 
         pos += twoFish.BLOCK_SIZE;
-      };
+      }
       return result;
     } else {
       throw 'Input passed is not an array';
-    };
+    }
   };
 
   return {
     encrypt : encrypt,
     decrypt : decrypt
-  }
+  };
 }

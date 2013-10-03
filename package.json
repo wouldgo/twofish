@@ -1,0 +1,29 @@
+{
+  "name": "twofish",
+  "version": "0.0.1",
+  "description": "Javascript Twofish implementation.",
+  "homepage": "https://github.com/wouldgo/twofish",
+  "keywords": [
+    "security",
+    "secrets",
+    "data",
+    "chiper"
+  ],
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/wouldgo/twofish.git"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-contrib-jshint": "~0.6.0"
+  },
+  "author": {
+    "name": "Dario Andrei",
+    "email": "wouldgo84@gmail.com",
+    "url": "https://github.com/wouldgo"
+  },
+  "contributors": [
+  ]
+}
