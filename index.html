@@ -3,7 +3,8 @@
   <title>2Fish</title>
   <script type="text/javascript" src="2-fish.js"></script>
   <script type="text/javascript">
-    /*var twoFish = twoFishECB();
+    var util = functionUtils();
+    var twoFish = twoFishECB();
     console.log('1 - A');
     var test1 = twoFish.test('secret12', 'A');
     console.log('--------');
@@ -12,13 +13,26 @@
     console.log('--------');
     console.log('32 - A');
     var test3 = twoFish.test('secret12', 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
-    console.log('--------');*/
+
+    console.log('----CBC-----');
 
     var twoFishCBC = twoFishCBC();
     var input = [0,1,2,3,4,5,6,7,9,10,11,12,13,14,15];
     var cp = twoFishCBC.encrypt(input);
     var cpt = twoFishCBC.decrypt(cp);
+
+    console.log(util.areEqual(input, cpt));
     console.log('input', input, '\r\ncp: ', cp, '\r\ncpt: ', cpt);
+
+    console.log('--------');
+
+    var input1 = [0,1,2,3,4,5,6,7,9,10,11,12,13,14,15,
+                 0,1,2,3,4,5,6,7,9,10,11,12,13,14,15];
+    var cp1 = twoFishCBC.encrypt(input1);
+    var cpt1 = twoFishCBC.decrypt(cp1);
+
+    console.log(util.areEqual(input1, cpt1));
+    console.log('input', input1, '\r\ncp: ', cp1, '\r\ncpt: ', cpt1);
   </script>
 </head>
 <body>
