@@ -1,7 +1,7 @@
 {
   "name": "twofish",
   "version": "0.0.1",
-  "description": "Javascript Twofish implementation.",
+  "description": "Javascript Twofish (ECB and CBC) implementation.",
   "homepage": "https://github.com/wouldgo/twofish",
   "keywords": [
     "security",
@@ -9,7 +9,6 @@
     "data",
     "chiper"
   ],
-  "private": true,
   "repository": {
     "type": "git",
     "url": "git://github.com/wouldgo/twofish.git"
