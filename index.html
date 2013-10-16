@@ -6,14 +6,20 @@
     var util = functionUtils();
     var twoFish = twoFishECB();
     console.log('1 - A');
-    var test1 = twoFish.test('secret12', 'A');
+    var pt1 = 'A'
+      , ct1 = twoFish.encrypt('secret12', pt1)
+      , cpt1 = twoFish.decrypt('secret12', ct1);
+
+    console.log('pt: ', pt1);
+    console.log('ct: ', ct1);
+    console.log('cpt: ', cpt1);
     console.log('--------');
-    console.log('16 - A');
+    /*console.log('16 - A');
     var test2 = twoFish.test('secret12', 'AAAAAAAAAAAAAAAA');
     console.log('--------');
     console.log('32 - A');
     var test3 = twoFish.test('secret12', 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
-
+*/
     console.log('----CBC-----');
 
     var twoFishCBC = twoFishCBC();

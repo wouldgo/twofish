@@ -17,18 +17,26 @@ module.exports = function(grunt) {
         src: [
           '2-fish.js'
         ]
-      }//,
-      //test: {
-      //  src: ['test/**/*.js']
-      //}
+      },
+      test: {
+        src: ['spec/**/*.js']
+      }
+    },
+    jasmine : {
+      src : '2-fish.js',
+      options : {
+        specs : 'spec/**/*.js'
+      }
     }
   });
 
   // NPM Tasks
   grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-contrib-jasmine');
 
   // Default tasks (when type grunt on terminal).
   grunt.registerTask('default', [
-    'jshint'
+    'jshint',
+    'jasmine'
   ]);
 };
