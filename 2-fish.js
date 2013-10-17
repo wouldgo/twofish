@@ -682,7 +682,7 @@ function twoFishECB() {
         var block = tmpBlockDecrypt[i];
         if (block !== 0x00) {
 
-          cpt = cpt.concat(String.fromCharCode(tmpBlockDecrypt[i]));
+          cpt = cpt.concat(String.fromCharCode(block));
         }
       }
     }

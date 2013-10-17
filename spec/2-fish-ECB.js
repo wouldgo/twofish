@@ -10,6 +10,7 @@
 */
 
 describe('Twofish ECB', function() {
+  console.info(' - Start Twofish ECB - ');
   var twoFish
     , utils = functionUtils();
 
@@ -17,19 +18,33 @@ describe('Twofish ECB', function() {
     twoFish = twoFishECB();
   });
 
-  it('should encrypt and then decrypt, receiving the same result as input (8 char length key)', function() {
-    var ct = twoFish.encrypt('secret12', 'A')
+  it('8 char length key - single simple character', function() {
+    var pt = 'A'
+      , ct = twoFish.encrypt('secret12', pt)
       , cpt = twoFish.decrypt('secret12', ct)
-      , ok = utils.areEqual('A', cpt);
+      , ok = utils.areEqual(pt, cpt);
 
+    console.info('Plaint Text: ', pt, '\r\nChiper Text: ', ct, '\r\nChipered Plaint Text: ', cpt);
     expect(ok).toEqual(true);
   });
 
-  it('should encrypt and then decrypt, receiving the same result as input (6 char length key)', function() {
-    var ct = twoFish.encrypt('secret', 'A')
+  it('6 char length key - single simple character', function() {
+    var pt = 'A'
+      , ct = twoFish.encrypt('secret', pt)
       , cpt = twoFish.decrypt('secret', ct)
-      , ok = utils.areEqual('A', cpt);
+      , ok = utils.areEqual(pt, cpt);
 
+    console.info('Plaint Text: ', pt, '\r\nChiper Text: ', ct, '\r\nChipered Plaint Text: ', cpt);
+    expect(ok).toEqual(true);
+  });
+
+  it('8 char length key - single "esotic" character', function() {
+    var pt = '☂'
+      , ct = twoFish.encrypt('secret12', pt)
+      , cpt = twoFish.decrypt('secret12', ct)
+      , ok = utils.areEqual(pt, cpt);
+
+    console.info('Plaint Text: ', pt, '\r\nChiper Text: ', ct, '\r\nChipered Plaint Text: ', cpt);
     expect(ok).toEqual(true);
   });
 });
