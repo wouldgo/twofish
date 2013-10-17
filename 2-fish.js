@@ -51,12 +51,117 @@ function functionUtils() {
     } else {
       throw 'Input is not an array';
     }
+  }
+  /*\
+  |*|
+  |*|  Base64 / binary data / UTF-8 strings utilities
+  |*|
+  |*|  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Base64_encoding_and_decoding
+  |*|
+  \*/
+
+  /* UTF-8 array to DOMString and vice versa */
+  , UTF8ArrToStr = function(aBytes) {
+    var sView = '';
+
+    for (var nPart, nLen = aBytes.length, nIdx = 0; nIdx < nLen; nIdx += 1) {
+
+      nPart = aBytes[nIdx];
+      /*jshint -W016 */
+      sView += String.fromCharCode(
+        nPart > 251 && nPart < 254 && nIdx + 5 < nLen ? /* six bytes */
+          /* (nPart - 252 << 32) is not possible in ECMAScript! So...: */
+          (nPart - 252) * 1073741824 + (aBytes[++nIdx] - 128 << 24) + (aBytes[++nIdx] - 128 << 18) + (aBytes[++nIdx] - 128 << 12) + (aBytes[++nIdx] - 128 << 6) + aBytes[++nIdx] - 128
+        : nPart > 247 && nPart < 252 && nIdx + 4 < nLen ? /* five bytes */
+          (nPart - 248 << 24) + (aBytes[++nIdx] - 128 << 18) + (aBytes[++nIdx] - 128 << 12) + (aBytes[++nIdx] - 128 << 6) + aBytes[++nIdx] - 128
+        : nPart > 239 && nPart < 248 && nIdx + 3 < nLen ? /* four bytes */
+          (nPart - 240 << 18) + (aBytes[++nIdx] - 128 << 12) + (aBytes[++nIdx] - 128 << 6) + aBytes[++nIdx] - 128
+        : nPart > 223 && nPart < 240 && nIdx + 2 < nLen ? /* three bytes */
+          (nPart - 224 << 12) + (aBytes[++nIdx] - 128 << 6) + aBytes[++nIdx] - 128
+        : nPart > 191 && nPart < 224 && nIdx + 1 < nLen ? /* two bytes */
+          (nPart - 192 << 6) + aBytes[++nIdx] - 128
+        : /* nPart < 127 ? */ /* one byte */
+          nPart
+      );
+      /*jshint +W016 */
+    }
+
+    return sView;
+  }
+  , strToUTF8Arr = function(sDOMStr) {
+    var aBytes
+      , nChr
+      , nStrLen = sDOMStr.length
+      , nArrLen = 0;
+
+    /* mapping... */
+
+    for (var nMapIdx = 0; nMapIdx < nStrLen; nMapIdx += 1) {
+
+      nChr = sDOMStr.charCodeAt(nMapIdx);
+      nArrLen += nChr < 0x80 ? 1 : nChr < 0x800 ? 2 : nChr < 0x10000 ? 3 : nChr < 0x200000 ? 4 : nChr < 0x4000000 ? 5 : 6;
+    }
+
+    aBytes = new Uint8Array(nArrLen);
+
+    /* transcription... */
+
+    for (var nIdx = 0, nChrIdx = 0; nIdx < nArrLen; nChrIdx += 1) {
+
+      nChr = sDOMStr.charCodeAt(nChrIdx);
+      /*jshint -W016 */
+      if (nChr < 128) {
+
+        /* one byte */
+        aBytes[nIdx++] = nChr;
+      } else if (nChr < 0x800) {
+
+        /* two bytes */
+        aBytes[nIdx++] = 192 + (nChr >>> 6);
+        aBytes[nIdx++] = 128 + (nChr & 63);
+      } else if (nChr < 0x10000) {
+
+        /* three bytes */
+        aBytes[nIdx++] = 224 + (nChr >>> 12);
+        aBytes[nIdx++] = 128 + (nChr >>> 6 & 63);
+        aBytes[nIdx++] = 128 + (nChr & 63);
+      } else if (nChr < 0x200000) {
+
+        /* four bytes */
+        aBytes[nIdx++] = 240 + (nChr >>> 18);
+        aBytes[nIdx++] = 128 + (nChr >>> 12 & 63);
+        aBytes[nIdx++] = 128 + (nChr >>> 6 & 63);
+        aBytes[nIdx++] = 128 + (nChr & 63);
+      } else if (nChr < 0x4000000) {
+
+        /* five bytes */
+        aBytes[nIdx++] = 248 + (nChr >>> 24);
+        aBytes[nIdx++] = 128 + (nChr >>> 18 & 63);
+        aBytes[nIdx++] = 128 + (nChr >>> 12 & 63);
+        aBytes[nIdx++] = 128 + (nChr >>> 6 & 63);
+        aBytes[nIdx++] = 128 + (nChr & 63);
+      } else /* if (nChr <= 0x7fffffff) */ {
+
+        /* six bytes */
+        aBytes[nIdx++] = 252 + /* (nChr >>> 32) is not possible in ECMAScript! So...: */ (nChr / 1073741824);
+        aBytes[nIdx++] = 128 + (nChr >>> 24 & 63);
+        aBytes[nIdx++] = 128 + (nChr >>> 18 & 63);
+        aBytes[nIdx++] = 128 + (nChr >>> 12 & 63);
+        aBytes[nIdx++] = 128 + (nChr >>> 6 & 63);
+        aBytes[nIdx++] = 128 + (nChr & 63);
+      }
+      /*jshint +W016 */
+    }
+
+    return aBytes;
   };
 
   return {
     isAnArray : isAnArray,
     areEqual : areEqual,
-    padArray : padArray
+    padArray : padArray,
+    stringToUTF8Array : strToUTF8Arr,
+    utf8ArrayToString : UTF8ArrToStr
   };
 }
 
@@ -394,15 +499,38 @@ function twoFishECB() {
   };
 
   var makeKey = function(aKey) {
-    aKey = new Uint8Array(aKey);
     if (aKey && utils.isAnArray(aKey)) {
+
       var keyLenght = aKey.length;
-      if (!(keyLenght === 8 ||
-            keyLenght === 16 ||
-            keyLenght === 24 ||
-            keyLenght === 32)) {
-        throw 'Invalid key length';
+      if (keyLenght < 8 ||
+          (keyLenght > 8 && keyLenght < 16) ||
+          (keyLenght > 16 && keyLenght < 24) ||
+          (keyLenght > 24 && keyLenght < 32)) {
+
+        var tmpKey = [];
+        for (var d = 0; d < aKey.length + (8 - aKey.length); d += 1) {
+
+          var nValue = aKey[d];
+          if (nValue) {
+
+            tmpKey.push(nValue);
+          } else {
+
+            tmpKey.push(0x00);
+          }
+        }
+        aKey = tmpKey;
+      } else if (keyLenght > 32) {
+
+        var limitedKey = [];
+        for (var limitIndex = 0; limitIndex < 32; limitIndex += 1) {
+
+          limitedKey.push(aKey[limitIndex]);
+        }
+        aKey = limitedKey;
       }
+      aKey = new Uint8Array(aKey);
+      keyLenght = aKey.length;
 
       var k64Cnt = keyLenght / 8
         , subkeyCnt = ROUND_SUBKEYS + 2*ROUNDS
@@ -632,27 +760,15 @@ function twoFishECB() {
   var encrypt = function(userKey, plainText) {
     var i
       , offset
-      , kb = []
-      , key
-      , pt = []
       , ct = [];
 
-    for (i = 0; i < userKey.length; i += 1) {
+    userKey = utils.stringToUTF8Array(userKey);
+    plainText = utils.stringToUTF8Array(plainText);
+    userKey = makeKey(userKey);
 
-      kb.push(userKey.charCodeAt(i));
-    }
+    for (offset = 0; offset < plainText.length; offset += 16) {
 
-    kb = utils.padArray(kb);
-    key = makeKey(kb);
-
-    for (i = 0; i < plainText.length; i += 1) {
-
-      pt.push(plainText.charCodeAt(i));
-    }
-
-    for (offset = 0; offset < pt.length; offset += 16) {
-
-      var tmpBlockEncrypt = blockEncrypt(pt, offset, key);
+      var tmpBlockEncrypt = blockEncrypt(plainText, offset, userKey);
       for (i = 0; i < tmpBlockEncrypt.length; i += 1) {
 
         ct.push(tmpBlockEncrypt[i]);
@@ -664,30 +780,26 @@ function twoFishECB() {
   , decrypt = function(userKey, chiperText) {
     var i
       , offset
-      , kb = []
-      , key
-      , cpt = '';
-    for (i = 0; i < userKey.length; i += 1) {
+      , cpt = []
+      , cptStr = '';
 
-      kb.push(userKey.charCodeAt(i));
-    }
-
-    kb = utils.padArray(kb);
-    key = makeKey(kb);
+    userKey = utils.stringToUTF8Array(userKey);
+    userKey = makeKey(userKey);
 
     for (offset = 0; offset < chiperText.length; offset += 16) {
-      var tmpBlockDecrypt = blockDecrypt(chiperText, offset, key);
+
+      var tmpBlockDecrypt = blockDecrypt(chiperText, offset, userKey);
       for (i = 0; i < tmpBlockDecrypt.length; i += 1) {
 
         var block = tmpBlockDecrypt[i];
         if (block !== 0x00) {
 
-          cpt = cpt.concat(String.fromCharCode(block));
+          cpt.push(block);
         }
       }
     }
-
-    return cpt;
+    cptStr = utils.utf8ArrayToString(cpt);
+    return cptStr;
   };
 
   return {
