@@ -1,4 +1,4 @@
-(function(exports, IV){
+(function(exports){
   'use strict';
 
   function RNG(seed) {
@@ -179,10 +179,10 @@
     };
   }
 
-  function twoFish(IV) {
+  function twoFish() {
     var utils = functionUtils()
     , rng = new RNG()
-    , initializingVector
+    , initializingVector = []
     // S-boxes
     , P0 = new Uint8Array([
       0xA9, 0x67, 0xB3, 0xE8,
@@ -326,19 +326,11 @@
     , OUTPUT_WHITEN = INPUT_WHITEN +  BLOCK_SIZE/4
     , ROUND_SUBKEYS = OUTPUT_WHITEN + BLOCK_SIZE/4; // 2*(# rounds)
 
-    if (IV && utils.isAnArray(IV) && IV.length === 16) {
-      initializingVector = new Uint8Array(IV);
-    } else if (!IV) {
-      var iv = [];
-      for (var d = 0; d < 16; d += 1) {
-        iv.push(rng.nextRange(0, 256));
-      }
-      initializingVector = new Uint8Array(iv);
-    } else if (IV && (
-        !utils.isAnArray(IV) || (IV.length < 16 || IV.length > 16)
-        )) {
-      throw 'Initlializing vector incorrect';
+    for (var d = 0; d < BLOCK_SIZE; d += 1) {
+      initializingVector.push(rng.nextRange(0, 256));
     }
+    initializingVector = new Uint8Array(initializingVector);
+   
 
     // Fixed p0/p1 permutations used in S-box lookup.
     // Change the following constant definitions, then S-boxes will automatically get changed.
@@ -804,7 +796,34 @@
       }
     };
 
-    var encrypt = function(userKey, plainText) {
+    var setInitializingVector = function(IV) {
+      if (IV &&
+        utils.isAnArray(IV) && IV.length === BLOCK_SIZE) {
+
+        initializingVector = new Uint8Array(IV);
+      } else if (IV &&
+        utils.isAnArray(IV) &&
+        IV.length < BLOCK_SIZE) {
+
+        var initialLength = IV.length;
+        for (var paddingIndex = 0; paddingIndex < BLOCK_SIZE - initialLength; paddingIndex += 1) {
+          
+          IV.push(rng.nextRange(0, 256));
+        }
+        initializingVector = new Uint8Array(IV);
+      } else if (IV &&
+        utils.isAnArray(IV) &&
+        IV.length > BLOCK_SIZE) {
+
+        initializingVector = new Uint8Array(IV.slice(0, BLOCK_SIZE));
+      } else if (!IV ||
+          !utils.isAnArray(IV) ||
+          (IV.length < 16 || IV.length > 16)) {
+
+        throw 'Initlializing vector incorrect';
+      }
+    }
+    , encrypt = function(userKey, plainText) {
       var i
         , offset
         , ct = [];
@@ -950,6 +969,8 @@
     };
 
     return {
+
+      setInitializingVector : setInitializingVector,
       encrypt : encrypt,
       decrypt : decrypt,
       encryptCBCMode : encryptCBC,
@@ -957,8 +978,9 @@
     };
   }
 
-  var thisFish = twoFish(IV);
+  var thisFish = twoFish();
 
+  exports.setInitializingVector = thisFish.setInitializingVector;
   exports.encrypt = thisFish.encrypt;
   exports.decrypt = thisFish.decrypt;
   exports.encryptCBCMode = thisFish.encryptCBCMode;
