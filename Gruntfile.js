@@ -27,16 +27,31 @@ module.exports = function(grunt) {
       options : {
         specs : 'spec/**/*.js'
       }
+    },
+    uglify: {
+      options: {
+        report: 'gzip'
+      },
+      minifyTarget: {
+        files: {
+          'dist/2-fish.min.js': ['2-fish.js']
+        }
+      }
     }
   });
 
   // NPM Tasks
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-jasmine');
+  grunt.loadNpmTasks('grunt-contrib-uglify');
 
   // Default tasks (when type grunt on terminal).
   grunt.registerTask('default', [
     'jshint',
     'jasmine'
+  ]);
+
+  grunt.registerTask('min', [
+    'uglify'
   ]);
 };
