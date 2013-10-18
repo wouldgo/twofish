@@ -1,6 +1,34 @@
 'use strict';
 
-var BLOCK_SIZE = 16;
+function RNG(seed) {
+  this.m = 0x80000000; // 2**31;
+  this.a = 1103515245;
+  this.c = 12345;
+
+  this.state = seed ? seed : Math.floor(Math.random() * (this.m-1));
+}
+
+RNG.prototype.nextInt = function() {
+  this.state = (this.a * this.state + this.c) % this.m;
+  return this.state;
+};
+
+RNG.prototype.nextFloat = function() {
+  // returns in range [0,1]
+  return this.nextInt() / (this.m - 1);
+};
+
+RNG.prototype.nextRange = function(start, end) {
+  // returns in range [start, end): including start, excluding end
+  // can't modulo nextInt because of weak randomness in lower bits
+  var rangeSize = end - start;
+  var randomUnder1 = this.nextInt() / this.m;
+  return start + Math.floor(randomUnder1 * rangeSize);
+};
+
+RNG.prototype.choice = function(array) {
+  return array[this.nextRange(0, array.length)];
+};
 
 function functionUtils() {
   var isAnArray = function(someVar) {
@@ -37,20 +65,6 @@ function functionUtils() {
       }
     }
     return true;
-  }
-  , padArray = function(arrayInput) {
-    if (arrayInput && isAnArray(arrayInput)) {
-      if (arrayInput.length < BLOCK_SIZE) {
-        var diff = BLOCK_SIZE - arrayInput.length;
-        for (var i = 0; i < diff; i += 1) {
-          arrayInput.push(0x00);
-        }
-      }
-
-      return arrayInput;
-    } else {
-      throw 'Input is not an array';
-    }
   }
   /*\
   |*|
@@ -159,14 +173,15 @@ function functionUtils() {
   return {
     isAnArray : isAnArray,
     areEqual : areEqual,
-    padArray : padArray,
     stringToUTF8Array : strToUTF8Arr,
     utf8ArrayToString : UTF8ArrToStr
   };
 }
 
-function twoFishECB() {
+function twoFish(IV) {
   var utils = functionUtils()
+  , rng = new RNG()
+  , initializingVector
   // S-boxes
   , P0 = new Uint8Array([
     0xA9, 0x67, 0xB3, 0xE8,
@@ -309,6 +324,20 @@ function twoFishECB() {
   , INPUT_WHITEN = 0
   , OUTPUT_WHITEN = INPUT_WHITEN +  BLOCK_SIZE/4
   , ROUND_SUBKEYS = OUTPUT_WHITEN + BLOCK_SIZE/4; // 2*(# rounds)
+
+  if (IV && utils.isAnArray(IV) && IV.length === 16) {
+    initializingVector = new Uint8Array(IV);
+  } else if (!IV) {
+    var iv = [];
+    for (var d = 0; d < 16; d += 1) {
+      iv.push(rng.nextRange(0, 256));
+    }
+    initializingVector = new Uint8Array(iv);
+  } else if (IV && (
+      !utils.isAnArray(IV) || (IV.length < 16 || IV.length > 16)
+      )) {
+    throw 'Initlializing vector incorrect';
+  }
 
   // Fixed p0/p1 permutations used in S-box lookup.
   // Change the following constant definitions, then S-boxes will automatically get changed.
@@ -496,6 +525,23 @@ function twoFishECB() {
                    sBox[0x200 + 2*_b(x, R+3)+1];
 
     return new Uint32Array([toReturn])[0];
+  }
+  , xorBuffers = function(a, b) {
+    var res = [];
+
+    if (a && b &&
+      utils.isAnArray(a) && utils.isAnArray(b) &&
+      a.length !== b.length) {
+      throw 'Buffer length must be equal';
+    }
+    a = new Uint8Array(a);
+    b = new Uint8Array(b);
+
+    for (var i = 0; i < a.length; i += 1) {
+      res[i] = (a[i] ^ b[i]) & 0xFF;
+    }
+
+    return new Uint8Array(res);
   };
 
   var makeKey = function(aKey) {
@@ -511,7 +557,7 @@ function twoFishECB() {
         for (var d = 0; d < aKey.length + (8 - aKey.length); d += 1) {
 
           var nValue = aKey[d];
-          if (nValue) {
+          if (nValue !== undefined) {
 
             tmpKey.push(nValue);
           } else {
@@ -800,162 +846,114 @@ function twoFishECB() {
     }
     cptStr = utils.utf8ArrayToString(cpt);
     return cptStr;
+  }
+  , encryptCBC = function(userKey, plainText) {
+    userKey = utils.stringToUTF8Array(userKey);
+    plainText = utils.stringToUTF8Array(plainText);
+    userKey = makeKey(userKey);
+
+    var result = []
+      , loops = plainText.length / BLOCK_SIZE
+      , pos = 0
+      , cBuffer = []
+      , buffer1 = []
+      , buffer2 = []
+      , vector = initializingVector;
+
+    for (var i = 0; i < loops; i += 1) {
+
+      cBuffer = plainText.subarray(pos, pos + BLOCK_SIZE);
+      if (cBuffer.length < BLOCK_SIZE) {
+
+        var tmpCBuffer = [];
+        for (var paddingIndex = 0; paddingIndex < BLOCK_SIZE; paddingIndex += 1) {
+          
+          var nVal = cBuffer[paddingIndex];
+          if (nVal !== undefined) {
+
+            tmpCBuffer.push(nVal);
+          } else {
+
+            tmpCBuffer.push(0x00);
+          }
+        }
+        cBuffer = tmpCBuffer;
+      }
+      buffer1 = xorBuffers(cBuffer, vector);
+      buffer2 = blockEncrypt(buffer1, 0, userKey);
+
+      for (var d = pos; d < buffer2.length + pos; d += 1) {
+
+        var position = d - pos;
+        if (buffer2[position] !== undefined) {
+
+          result.splice(d, 0, buffer2[position]);
+        }
+      }
+      vector = buffer2;
+      pos += BLOCK_SIZE;
+    }
+    return result;
+  }
+  , decryptCBC = function(userKey, chiperText) {
+    userKey = utils.stringToUTF8Array(userKey);
+    userKey = makeKey(userKey);
+
+    var result = []
+      , loops = chiperText.length / BLOCK_SIZE
+      , pos = 0
+      , cBuffer = []
+      , buffer1 = []
+      , plain = []
+      , vector = initializingVector
+      , resultStr;
+
+    for (var i = 0; i < loops; i += 1) {
+
+      cBuffer = chiperText.slice(pos, pos + BLOCK_SIZE);
+      if (cBuffer.length < BLOCK_SIZE) {
+
+        var tmpCBuffer = [];
+        for (var paddingIndex = 0; paddingIndex < BLOCK_SIZE; paddingIndex += 1) {
+          
+          var nVal = cBuffer[paddingIndex];
+          if (nVal !== undefined) {
+
+            tmpCBuffer.push(nVal);
+          } else {
+
+            tmpCBuffer.push(0x00);
+          }
+        }
+        cBuffer = tmpCBuffer;
+      }
+      buffer1 = blockDecrypt(cBuffer, 0, userKey);
+      plain = xorBuffers(buffer1, vector);
+
+      for (var d = pos; d < plain.length + pos; d += 1) {
+
+        var position = d - pos;
+        if (plain[position]) {
+
+          result.splice(d, 0, plain[position]);
+        }
+      }
+      plain = [];
+      vector = cBuffer;
+
+      pos += BLOCK_SIZE;
+    }
+
+    resultStr = utils.utf8ArrayToString(result);
+    return resultStr;
   };
 
   return {
-    BLOCK_SIZE : BLOCK_SIZE,
     encrypt : encrypt,
     decrypt : decrypt,
-    makeKey : makeKey,
-    blockEncrypt : blockEncrypt,
-    blockDecrypt : blockDecrypt
+    encryptCBCMode : encryptCBC,
+    decryptCBCMode : decryptCBC
   };
 }
 
-function RNG(seed) {
-  this.m = 0x80000000; // 2**31;
-  this.a = 1103515245;
-  this.c = 12345;
-
-  this.state = seed ? seed : Math.floor(Math.random() * (this.m-1));
-}
-
-RNG.prototype.nextInt = function() {
-  this.state = (this.a * this.state + this.c) % this.m;
-  return this.state;
-};
-
-RNG.prototype.nextFloat = function() {
-  // returns in range [0,1]
-  return this.nextInt() / (this.m - 1);
-};
-
-RNG.prototype.nextRange = function(start, end) {
-  // returns in range [start, end): including start, excluding end
-  // can't modulo nextInt because of weak randomness in lower bits
-  var rangeSize = end - start;
-  var randomUnder1 = this.nextInt() / this.m;
-  return start + Math.floor(randomUnder1 * rangeSize);
-};
-
-RNG.prototype.choice = function(array) {
-  return array[this.nextRange(0, array.length)];
-};
-
-function twoFishCBC(IV) {
-  var rng = new RNG()
-    , twoFishKey = [];
-  for (var i = 0; i < 32; i += 1) {
-    twoFishKey.push(rng.nextRange(0, 256));
-  }
-  twoFishKey = new Uint8Array(twoFishKey);
-
-  var utils = functionUtils()
-    , initializingVector
-    , twoFish = twoFishECB()
-    , sessionKey = twoFish.makeKey(twoFishKey);
-
-  if (IV && utils.isAnArray(IV) && IV.length === 16) {
-    initializingVector = new Uint8Array(IV);
-  } else if (!IV) {
-    var iv = [];
-    for (var d = 0; d < 16; d += 1) {
-      iv.push(rng.nextRange(0, 256));
-    }
-    initializingVector = new Uint8Array(iv);
-  } else if (IV && (
-      !utils.isAnArray(IV) || (IV.length < 16 || IV.length > 16)
-      )) {
-    throw 'Initlializing vector incorrect';
-  }
-
-  var xorBuffers = function(a, b) {
-    var res = [];
-
-    if (a && b &&
-      utils.isAnArray(a) && utils.isAnArray(b) &&
-      a.length !== b.length) {
-      throw 'Buffer length must be equal';
-    }
-    a = new Uint8Array(a);
-    b = new Uint8Array(b);
-
-    for (var i = 0; i < a.length; i += 1) {
-      res[i] = (a[i] ^ b[i]) & 0xFF;
-    }
-
-    return new Uint8Array(res);
-  }
-  , encrypt = function(input) {
-    if (input && utils.isAnArray(input)) {
-      input = utils.padArray(input);
-      var result = []
-        , loops = input.length / BLOCK_SIZE
-        , pos = 0
-        , cBuffer = []
-        , buffer1 = []
-        , buffer2 = []
-        , vector = initializingVector;
-
-      for (var i = 0; i < loops; i += 1) {
-        cBuffer = input.slice(pos, pos + BLOCK_SIZE);
-        cBuffer = utils.padArray(cBuffer);
-        buffer1 = xorBuffers(cBuffer, vector);
-        buffer2 = twoFish.blockEncrypt(buffer1, 0, sessionKey);
-
-        for (var d = pos; d < buffer2.length + pos; d += 1) {
-          var position = d - pos;
-          if (buffer2[position] !== undefined) {
-            result.splice(d, 0, buffer2[position]);
-          }
-        }
-        vector = buffer2;
-        pos += BLOCK_SIZE;
-      }
-      return result;
-    } else {
-      throw 'Input passed is not an array';
-    }
-  }
-  , decrypt = function(input) {
-    if (input && utils.isAnArray(input)) {
-      input = utils.padArray(input);
-      var result = []
-        , loops = input.length / BLOCK_SIZE
-        , pos = 0
-        , cBuffer = []
-        , buffer1 = []
-        , plain = []
-        , vector = initializingVector;
-
-      for (var i = 0; i < loops; i += 1) {
-        cBuffer = input.slice(pos, pos + BLOCK_SIZE);
-        cBuffer = utils.padArray(cBuffer);
-        buffer1 = twoFish.blockDecrypt(cBuffer, 0, sessionKey);
-        plain = xorBuffers(buffer1, vector);
-
-        for (var d = pos; d < plain.length + pos; d += 1) {
-          var position = d - pos;
-          if (plain[position] !== undefined) {
-
-            result.splice(d, 0, plain[position]);
-          }
-        }
-        plain = [];
-        vector = cBuffer;
-
-        pos += BLOCK_SIZE;
-      }
-      return result;
-    } else {
-      throw 'Input passed is not an array';
-    }
-  };
-
-  return {
-    encrypt : encrypt,
-    decrypt : decrypt
-  };
-}
-
-/*exported twoFishCBC, twoFishECB */
+/*exported twoFish*/
