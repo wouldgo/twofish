@@ -9,7 +9,7 @@
 
 describe('Twofish CBC', function() {
   console.info(' - Start Twofish CBC - ');
-  
+
   it('6 char length key - single simple character', function() {
     var key = 'secret'
       , pt = 'A'

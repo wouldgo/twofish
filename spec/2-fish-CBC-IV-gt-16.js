@@ -9,7 +9,7 @@
 
 describe('Twofish CBC - Initializing vector passed and less than 16 characters', function() {
   console.info(' - Start Twofish CBC - ');
-  
+
   it('6 char length key - single simple character', function() {
     twoFish.setInitializingVector([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]);
     var key = 'secret'

@@ -330,7 +330,7 @@
       initializingVector.push(rng.nextRange(0, 256));
     }
     initializingVector = new Uint8Array(initializingVector);
-   
+
 
     // Fixed p0/p1 permutations used in S-box lookup.
     // Change the following constant definitions, then S-boxes will automatically get changed.
@@ -807,7 +807,7 @@
 
         var initialLength = IV.length;
         for (var paddingIndex = 0; paddingIndex < BLOCK_SIZE - initialLength; paddingIndex += 1) {
-          
+
           IV.push(rng.nextRange(0, 256));
         }
         initializingVector = new Uint8Array(IV);
@@ -887,7 +887,7 @@
 
           var tmpCBuffer = [];
           for (var paddingIndex = 0; paddingIndex < BLOCK_SIZE; paddingIndex += 1) {
-            
+
             var nVal = cBuffer[paddingIndex];
             if (nVal !== undefined) {
 
@@ -935,7 +935,7 @@
 
           var tmpCBuffer = [];
           for (var paddingIndex = 0; paddingIndex < BLOCK_SIZE; paddingIndex += 1) {
-            
+
             var nVal = cBuffer[paddingIndex];
             if (nVal !== undefined) {
 
@@ -986,4 +986,4 @@
   exports.encryptCBCMode = thisFish.encryptCBCMode;
   exports.decryptCBCMode = thisFish.decryptCBCMode;
 
-})(typeof exports === 'undefined'? this.twoFish={} : exports);
+})(typeof exports === 'undefined' ? this.twoFish = {} : exports);
