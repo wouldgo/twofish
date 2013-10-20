@@ -1,6 +1,6 @@
 {
   "name": "twofish",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Javascript Twofish implementation.",
   "homepage": "https://github.com/wouldgo/twofish",
   "keywords": [
