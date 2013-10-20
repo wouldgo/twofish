@@ -179,7 +179,7 @@
     };
   }
 
-  function twoFish() {
+  exports.twoFish = function(IV) {
     var utils = functionUtils()
     , rng = new RNG()
     , initializingVector = []
@@ -326,8 +326,36 @@
     , OUTPUT_WHITEN = INPUT_WHITEN +  BLOCK_SIZE/4
     , ROUND_SUBKEYS = OUTPUT_WHITEN + BLOCK_SIZE/4; // 2*(# rounds)
 
-    for (var d = 0; d < BLOCK_SIZE; d += 1) {
-      initializingVector.push(rng.nextRange(0, 256));
+    if (!IV) {
+
+      for (var d = 0; d < BLOCK_SIZE; d += 1) {
+
+        initializingVector.push(rng.nextRange(0, 256));
+      }
+    } else if (IV &&
+      utils.isAnArray(IV) && IV.length === BLOCK_SIZE) {
+
+      initializingVector = new Uint8Array(IV);
+    } else if (IV &&
+      utils.isAnArray(IV) &&
+      IV.length < BLOCK_SIZE) {
+
+      var initialLength = IV.length;
+      for (var paddingIndex = 0; paddingIndex < BLOCK_SIZE - initialLength; paddingIndex += 1) {
+
+        IV.push(rng.nextRange(0, 256));
+      }
+      initializingVector = new Uint8Array(IV);
+    } else if (IV &&
+      utils.isAnArray(IV) &&
+      IV.length > BLOCK_SIZE) {
+
+      initializingVector = new Uint8Array(IV.slice(0, BLOCK_SIZE));
+    } else if (!IV ||
+        !utils.isAnArray(IV) ||
+        (IV.length < 16 || IV.length > 16)) {
+
+      throw 'Initlializing vector incorrect';
     }
     initializingVector = new Uint8Array(initializingVector);
 
@@ -796,34 +824,7 @@
       }
     };
 
-    var setInitializingVector = function(IV) {
-      if (IV &&
-        utils.isAnArray(IV) && IV.length === BLOCK_SIZE) {
-
-        initializingVector = new Uint8Array(IV);
-      } else if (IV &&
-        utils.isAnArray(IV) &&
-        IV.length < BLOCK_SIZE) {
-
-        var initialLength = IV.length;
-        for (var paddingIndex = 0; paddingIndex < BLOCK_SIZE - initialLength; paddingIndex += 1) {
-
-          IV.push(rng.nextRange(0, 256));
-        }
-        initializingVector = new Uint8Array(IV);
-      } else if (IV &&
-        utils.isAnArray(IV) &&
-        IV.length > BLOCK_SIZE) {
-
-        initializingVector = new Uint8Array(IV.slice(0, BLOCK_SIZE));
-      } else if (!IV ||
-          !utils.isAnArray(IV) ||
-          (IV.length < 16 || IV.length > 16)) {
-
-        throw 'Initlializing vector incorrect';
-      }
-    }
-    , encrypt = function(userKey, plainText) {
+    var encrypt = function(userKey, plainText) {
       var i
         , offset
         , ct = [];
@@ -970,20 +971,20 @@
 
     return {
 
-      setInitializingVector : setInitializingVector,
       encrypt : encrypt,
       decrypt : decrypt,
       encryptCBCMode : encryptCBC,
       decryptCBCMode : decryptCBC
     };
-  }
+  };
 
-  var thisFish = twoFish();
+/*  var thisFish = twoFish();
 
   exports.setInitializingVector = thisFish.setInitializingVector;
   exports.encrypt = thisFish.encrypt;
   exports.decrypt = thisFish.decrypt;
   exports.encryptCBCMode = thisFish.encryptCBCMode;
   exports.decryptCBCMode = thisFish.decryptCBCMode;
+  */
 
-})(typeof exports === 'undefined' ? this.twoFish = {} : exports);
+})(typeof exports === 'undefined' ? this : exports);
