@@ -1,11 +1,19 @@
 'use strict';
 
-//TODO Wathcer sul server per le modifiche ai files?
-
 module.exports = function(grunt) {
 
-  // Project configuration.
+  var banner = ['/*!',
+    ' * Twofish (ECB and CBC) javascript implementation v<%= pkg.version %>',
+    ' *',
+    ' * Released under the MIT license',
+    ' * www.opensource.org/licenses/MIT',
+    ' *',
+    ' * <%= grunt.template.today("yyyy-mm-dd") %>',
+    ' */\n\n'
+  ].join('\n');
+
   grunt.initConfig({
+    pkg: grunt.file.readJSON('package.json'),
     jshint: {
       options: {
         jshintrc: '.jshintrc'
@@ -30,7 +38,8 @@ module.exports = function(grunt) {
     },
     uglify: {
       options: {
-        report: 'gzip'
+        report: 'gzip',
+        banner: banner
       },
       minifyTarget: {
         files: {
@@ -48,10 +57,7 @@ module.exports = function(grunt) {
   // Default tasks (when type grunt on terminal).
   grunt.registerTask('default', [
     'jshint',
-    'jasmine'
-  ]);
-
-  grunt.registerTask('min', [
+    'jasmine',
     'uglify'
   ]);
 };

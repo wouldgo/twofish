@@ -978,13 +978,4 @@
     };
   };
 
-/*  var thisFish = twoFish();
-
-  exports.setInitializingVector = thisFish.setInitializingVector;
-  exports.encrypt = thisFish.encrypt;
-  exports.decrypt = thisFish.decrypt;
-  exports.encryptCBCMode = thisFish.encryptCBCMode;
-  exports.decryptCBCMode = thisFish.decryptCBCMode;
-  */
-
 })(typeof exports === 'undefined' ? this : exports);
