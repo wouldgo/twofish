@@ -23,7 +23,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -34,7 +34,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -45,7 +45,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -56,7 +56,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -67,7 +67,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -78,7 +78,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -89,7 +89,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -100,7 +100,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -111,7 +111,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -122,7 +122,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -133,7 +133,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -144,7 +144,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -155,7 +155,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -166,7 +166,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -177,7 +177,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -188,7 +188,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -199,7 +199,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -210,7 +210,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -221,7 +221,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -232,7 +232,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -243,7 +243,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -254,7 +254,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -265,7 +265,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -276,7 +276,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -287,7 +287,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -298,7 +298,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -309,7 +309,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -322,7 +322,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , firstArr = ct.slice(0, 16)
       , secondArr = ct.slice(16, 32);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-\r\n (0..16) Array: ', firstArr, '-\r\n(16..32) Array: ', secondArr, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-\r\n (0..16) Array:', firstArr, '-\r\n(16..32) Array:', secondArr, '-');
     expect(firstArr).not.toEqual(secondArr);
   });
 
@@ -335,7 +335,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , firstArr = ct.slice(0, 16)
       , secondArr = ct.slice(16, 32);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-\r\n (0..16) Array: ', firstArr, '-\r\n(16..32) Array: ', secondArr, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-\r\n (0..16) Array:', firstArr, '-\r\n(16..32) Array:', secondArr, '-');
     expect(firstArr).not.toEqual(secondArr);
   });
 
@@ -346,7 +346,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -357,7 +357,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -368,7 +368,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -379,7 +379,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , ct = twF.encryptCBCMode(key, pt)
       , cpt = twF.decryptCBCMode(key, ct);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-');
     expect(pt).toEqual(cpt);
   });
 
@@ -392,7 +392,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , firstArr = ct.slice(0, 16)
       , secondArr = ct.slice(16, 32);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-\r\n (0..16) Array: ', firstArr, '-\r\n(16..32) Array: ', secondArr, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-\r\n (0..16) Array:', firstArr, '-\r\n(16..32) Array:', secondArr, '-');
     expect(firstArr).not.toEqual(secondArr);
   });
 
@@ -405,7 +405,7 @@ describe('Twofish CBC - Initializing vector passed and less than 16 characters',
       , firstArr = ct.slice(0, 16)
       , secondArr = ct.slice(16, 32);
 
-    console.info('Key: ', key, '-\r\nPlaint Text: ', pt, '-\r\nChiper Text: ', ct, '-\r\nChipered Plaint Text: ', cpt, '-\r\n (0..16) Array: ', firstArr, '-\r\n(16..32) Array: ', secondArr, '-');
+    console.info('Key:', key, '-\r\nPlaint Text:', pt, '-\r\nChiper Text:', ct, '-\r\nChipered Plaint Text:', cpt, '-\r\n (0..16) Array:', firstArr, '-\r\n(16..32) Array:', secondArr, '-');
     expect(firstArr).not.toEqual(secondArr);
   });
 });

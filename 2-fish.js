@@ -829,8 +829,21 @@
         , offset
         , ct = [];
 
-      userKey = utils.stringToUTF8Array(userKey);
-      plainText = utils.stringToUTF8Array(plainText);
+      if (utils.isAnArray(userKey)) {
+
+        userKey = new Uint8Array(userKey);
+      } else {
+
+        userKey = utils.stringToUTF8Array(userKey);
+      }
+
+      if (utils.isAnArray(plainText)) {
+
+        plainText = new Uint8Array(plainText);
+      } else {
+
+        plainText = utils.stringToUTF8Array(plainText);
+      }
       userKey = makeKey(userKey);
 
       for (offset = 0; offset < plainText.length; offset += 16) {
@@ -844,13 +857,19 @@
 
       return ct;
     }
-    , decrypt = function(userKey, chiperText) {
+    , decrypt = function(userKey, chiperText, inByte) {
       var i
         , offset
         , cpt = []
         , cptStr = '';
 
-      userKey = utils.stringToUTF8Array(userKey);
+      if (utils.isAnArray(userKey)) {
+
+        userKey = new Uint8Array(userKey);
+      } else {
+
+        userKey = utils.stringToUTF8Array(userKey);
+      }
       userKey = makeKey(userKey);
 
       for (offset = 0; offset < chiperText.length; offset += 16) {
@@ -865,12 +884,32 @@
           }
         }
       }
-      cptStr = utils.utf8ArrayToString(cpt);
-      return cptStr;
+
+      if (inByte) {
+
+        return cpt;
+      } else {
+
+        cptStr = utils.utf8ArrayToString(cpt);
+        return cptStr;
+      }
     }
     , encryptCBC = function(userKey, plainText) {
-      userKey = utils.stringToUTF8Array(userKey);
-      plainText = utils.stringToUTF8Array(plainText);
+      if (utils.isAnArray(userKey)) {
+
+        userKey = new Uint8Array(userKey);
+      } else {
+
+        userKey = utils.stringToUTF8Array(userKey);
+      }
+
+      if (utils.isAnArray(plainText)) {
+
+        plainText = new Uint8Array(plainText);
+      } else {
+
+        plainText = utils.stringToUTF8Array(plainText);
+      }
       userKey = makeKey(userKey);
 
       var result = []
@@ -916,8 +955,14 @@
       }
       return result;
     }
-    , decryptCBC = function(userKey, chiperText) {
-      userKey = utils.stringToUTF8Array(userKey);
+    , decryptCBC = function(userKey, chiperText, inByte) {
+      if (utils.isAnArray(userKey)) {
+
+        userKey = new Uint8Array(userKey);
+      } else {
+
+        userKey = utils.stringToUTF8Array(userKey);
+      }
       userKey = makeKey(userKey);
 
       var result = []
@@ -965,8 +1010,14 @@
         pos += BLOCK_SIZE;
       }
 
-      resultStr = utils.utf8ArrayToString(result);
-      return resultStr;
+      if (inByte) {
+
+        return result;
+      } else {
+
+        resultStr = utils.utf8ArrayToString(result);
+        return resultStr;
+      }
     };
 
     return {
