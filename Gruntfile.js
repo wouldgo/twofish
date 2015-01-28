@@ -1,63 +1,76 @@
-'use strict';
+/*global module*/
+(function setUp(module) {
+  'use strict';
 
-module.exports = function(grunt) {
+  module.exports = function exportingFunction(grunt) {
 
-  var banner = ['/*!',
-    ' * Twofish (ECB and CBC) javascript implementation v<%= pkg.version %>',
-    ' *',
-    ' * Released under the MIT license',
-    ' * www.opensource.org/licenses/MIT',
-    ' *',
-    ' * <%= grunt.template.today("yyyy-mm-dd") %>',
-    ' */\n\n'
-  ].join('\n');
+    var banner = ['/*!',
+      ' * Twofish (ECB and CBC) javascript implementation v<%= pkg.version %>',
+      ' *',
+      ' * Released under the MIT license',
+      ' * www.opensource.org/licenses/MIT',
+      ' *',
+      ' * <%= grunt.template.today("yyyy-mm-dd") %>',
+      ' */\n\n'
+    ].join('\n');
 
-  grunt.initConfig({
-    pkg: grunt.file.readJSON('package.json'),
-    jshint: {
-      options: {
-        jshintrc: '.jshintrc'
+    grunt.initConfig({
+      'pkg': grunt.file.readJSON('package.json'),
+      'confs': {
+        'dist': 'dist',
+        'config': 'config',
+        'src': 'src',
+        'spec': 'spec'
       },
-      gruntfile: {
-        src: 'Gruntfile.js'
-      },
-      lib: {
-        src: [
-          '2-fish.js'
+      'eslint': {
+        'options': {
+          'config': '<%= confs.config %>/eslint.json'
+        },
+        'target': [
+          'Gruntfile.js',
+          '<%= confs.src %>/**/*.js'//, '<%= confs.spec %>/**/*.js'
         ]
       },
-      test: {
-        src: ['spec/**/*.js']
-      }
-    },
-    jasmine : {
-      src : '2-fish.js',
-      options : {
-        specs : 'spec/**/*.js'
-      }
-    },
-    uglify: {
-      options: {
-        report: 'gzip',
-        banner: banner
+      'uglify': {
+        'options': {
+          'sourceMap': true,
+          'preserveComments': false,
+          'report': 'gzip',
+          'banner': banner
+        },
+        'minifyTarget': {
+          'files': {
+            '<%= confs.dist %>/<%= pkg.name %>.min.js': [
+              '<%= confs.src %>/<%= pkg.name %>.js'
+            ]
+          }
+        }
       },
-      minifyTarget: {
-        files: {
-          'dist/2-fish.min.js': ['2-fish.js']
+      'jasmine': {
+        'src': '<%= confs.src %>/<%= pkg.name %>.js',
+        'options': {
+          'specs': '<%= confs.spec %>/**/*.js'
         }
       }
-    }
-  });
+    });
 
-  // NPM Tasks
-  grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-jasmine');
-  grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-eslint');
 
-  // Default tasks (when type grunt on terminal).
-  grunt.registerTask('default', [
-    'jshint',
-    'jasmine',
-    'uglify'
-  ]);
-};
+    grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-contrib-jasmine');
+
+    grunt.registerTask('default', [
+      'eslint'
+    ]);
+
+    grunt.registerTask('test', [
+      'eslint',
+      'jasmine'
+    ]);
+
+    grunt.registerTask('prod', [
+      'eslint',
+      'uglify'
+    ]);
+  };
+}(module));

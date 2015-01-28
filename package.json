@@ -15,10 +15,10 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "grunt": "~0.4.1",
-    "grunt-contrib-jshint": "~0.6.0",
-    "grunt-contrib-jasmine": "~0.5.2",
-    "grunt-contrib-uglify": "~0.2.4"
+    "grunt": "*",
+    "grunt-contrib-uglify": "*",
+    "grunt-contrib-jasmine": "*",
+    "grunt-eslint": "*"
   },
   "author": {
     "name": "Dario Andrei",
