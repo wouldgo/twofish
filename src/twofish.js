@@ -94,6 +94,7 @@
   };
 
   exports.twofish = function twofish(IV) {
+
     var utils = functionUtils()
       , rng = new RNG()
       , initializingVector = []
@@ -955,6 +956,7 @@
 
     return {
 
+      'equalsArray': utils.areEqual,
       'encrypt': encrypt,
       'decrypt': decrypt/*,
       'encryptCBCMode': encryptCBC,
