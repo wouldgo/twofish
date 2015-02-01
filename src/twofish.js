@@ -271,8 +271,8 @@
       , P_33 = P_31 ^ 1
       , P_34 = 1
 
-      , GF256_FDBK_2 = 0x169 / 2
-      , GF256_FDBK_4 = 0x169 / 4
+      , GF256_FDBK_2 = Math.floor(0x169 / 2)
+      , GF256_FDBK_4 = Math.floor(0x169 / 4)
       , RS_GF_FDBK = 0x14D
 
       , lfsr1 = function lfsr1(x) {
@@ -316,7 +316,8 @@
           localMDS[2][i] = mX[P_20] << 0 | mY[P_20] << 8 | m1[P_20] << 16 | mY[P_20] << 24;
           localMDS[3][i] = mX[P_30] << 0 | m1[P_30] << 8 | mY[P_30] << 16 | mX[P_30] << 24;
         }
-        return localMDS;
+
+        return [new Uint32Array(localMDS[0]), new Uint32Array(localMDS[1]), new Uint32Array(localMDS[2]), new Uint32Array(localMDS[3])];
       }())
       , b0 = function b0(x) {
 
@@ -365,40 +366,35 @@
           , g2 = (b << 1 ^ ((b & 0x80) !== 0 ? RS_GF_FDBK : 0)) & 0xFF
           , g3 = b >>> 1 ^ ((b & 0x01) !== 0 ? RS_GF_FDBK >>> 1 : 0 ) ^ g2
           , result = x << 8 ^ g3 << 24 ^ g2 << 16 ^ g3 << 8 ^ b;
-        return new Uint32Array([result])[0];
+        return result;
       }
       , rsMDSEncode = function rsMDSEncode(k0, k1) {
 
-        var realK0 = k0[0]
-          , realK1 = k1[0]
-          , index = 0;
-
+        var index = 0;
         for (; index < 4; index += 1) {
 
-          realK1 = rsRem(realK1);
+          k1 = rsRem(k1);
         }
-        realK1 ^= realK0;
+        k1 ^= k0;
         for (index = 0; index < 4; index += 1) {
 
-          realK1 = rsRem(realK1);
+          k1 = rsRem(k1);
         }
-        return new Uint32Array([realK1])[0];
+        return k1;
       }
       , f32 = function f32(k64Cnt, x, k32 ) {
 
-        var realK64Cnt = k64Cnt[0]
-          , realX = x[0]
-          , lB0 = b0(realX)
-          , lB1 = b1(realX)
-          , lB2 = b2(realX)
-          , lB3 = b3(realX)
-          , k0 = k32[0]
-          , k1 = k32[1]
-          , k2 = k32[2]
-          , k3 = k32[3]
+        var lB0 = b0(x)
+          , lB1 = b1(x)
+          , lB2 = b2(x)
+          , lB3 = b3(x)
+          , k0 = k32[0] || 0
+          , k1 = k32[1] || 0
+          , k2 = k32[2] || 0
+          , k3 = k32[3] || 0
           , result = 0;
 
-        switch (realK64Cnt & 3) {
+        switch (k64Cnt & 3) {
           case 1:
             result = MDS[0][P[P_01][lB0] & 0xFF ^ b0(k0)] ^
                      MDS[1][P[P_11][lB1] & 0xFF ^ b1(k0)] ^
@@ -430,7 +426,7 @@
           default:
         }
 
-        return new Uint32Array([result])[0];
+        return result;
       }
       , fe32 = function fe32(sBox, x, R) {
 
@@ -525,22 +521,22 @@
           keyLenght = aKey.length;
           for (i = 0, j = k64Cnt - 1; i < 4 && offset < keyLenght; i += 1, j -= 1) {
 
-            k32e[i] = aKey[offset += 1] & 0xFF | (aKey[offset += 1] & 0xFF) << 8 | (aKey[offset += 1] & 0xFF) << 16 | (aKey[offset += 1] & 0xFF) << 24;
-            k32o[i] = aKey[offset += 1] & 0xFF | (aKey[offset += 1] & 0xFF) << 8 | (aKey[offset += 1] & 0xFF) << 16 | (aKey[offset += 1] & 0xFF) << 24;
-            sBoxKey[j] = rsMDSEncode(new Uint32Array([k32e[i]]), new Uint32Array([k32o[i]]));
+            /*eslint-disable no-plusplus*/
+            k32e[i] = aKey[offset++] & 0xFF | (aKey[offset++] & 0xFF) << 8 | (aKey[offset++] & 0xFF) << 16 | (aKey[offset++] & 0xFF) << 24;
+            k32o[i] = aKey[offset++] & 0xFF | (aKey[offset++] & 0xFF) << 8 | (aKey[offset++] & 0xFF) << 16 | (aKey[offset++] & 0xFF) << 24;
+            /*eslint-enable no-plusplus*/
+            sBoxKey[j] = rsMDSEncode(k32e[i], k32o[i]);
           }
-          sBoxKey = new Uint32Array(sBoxKey);
           for (i = q = 0; i < subkeyCnt / 2; i += 1, q += SK_STEP) {
 
-            A = f32(new Uint32Array([k64Cnt]), new Uint32Array([q]), new Uint32Array([k32e]));
-            B = f32(new Uint32Array([k64Cnt]), new Uint32Array([q + SK_BUMP]), new Uint32Array([k32o]));
+            A = f32(k64Cnt, q, k32e);
+            B = f32(k64Cnt, q + SK_BUMP, k32o);
             B = B << 8 | B >>> 24;
             A += B;
             subKeys[2 * i] = A;
             A += B;
             subKeys[2 * i + 1] = A << SK_ROTL | A >>> 32 - SK_ROTL;
           }
-          subKeys = new Uint32Array(subKeys);
           k0 = sBoxKey[0];
           k1 = sBoxKey[1];
           k2 = sBoxKey[2];
@@ -582,7 +578,7 @@
             }
           }
 
-          return [new Uint32Array(sBox), subKeys];
+          return [sBox, subKeys];
         }
 
         throw 'key passed is undefined or not an array';
@@ -598,25 +594,27 @@
         var sBox = sessionKey[0]
           , sKey = sessionKey[1]
 
-          , x0 = input[inOffset] & 0xFF |
-                 (input[inOffset += 1] & 0xFF) << 8 |
-                 (input[inOffset += 1] & 0xFF) << 16 |
-                 (input[inOffset += 1] & 0xFF) << 24
+          /*eslint-disable no-plusplus*/
+          , x0 = input[inOffset++] & 0xFF |
+                 (input[inOffset++] & 0xFF) << 8 |
+                 (input[inOffset++] & 0xFF) << 16 |
+                 (input[inOffset++] & 0xFF) << 24
 
-          , x1 = input[inOffset += 1] & 0xFF |
-                 (input[inOffset += 1] & 0xFF) << 8 |
-                 (input[inOffset += 1] & 0xFF) << 16 |
-                 (input[inOffset += 1] & 0xFF) << 24
+          , x1 = input[inOffset++] & 0xFF |
+                 (input[inOffset++] & 0xFF) << 8 |
+                 (input[inOffset++] & 0xFF) << 16 |
+                 (input[inOffset++] & 0xFF) << 24
 
-          , x2 = input[inOffset += 1] & 0xFF |
-                 (input[inOffset += 1] & 0xFF) << 8 |
-                 (input[inOffset += 1] & 0xFF) << 16 |
-                 (input[inOffset += 1] & 0xFF) << 24
+          , x2 = input[inOffset++] & 0xFF |
+                 (input[inOffset++] & 0xFF) << 8 |
+                 (input[inOffset++] & 0xFF) << 16 |
+                 (input[inOffset++] & 0xFF) << 24
 
-          , x3 = input[inOffset += 1] & 0xFF |
-                 (input[inOffset += 1] & 0xFF) << 8 |
-                 (input[inOffset += 1] & 0xFF) << 16 |
-                 (input[inOffset += 1] & 0xFF) << 24
+          , x3 = input[inOffset++] & 0xFF |
+                 (input[inOffset++] & 0xFF) << 8 |
+                 (input[inOffset++] & 0xFF) << 16 |
+                 (input[inOffset++] & 0xFF) << 24
+          /*eslint-enable no-plusplus*/
 
           , t0
           , t1
@@ -675,25 +673,27 @@
         var sBox = sessionKey[0]
           , sKey = sessionKey[1]
 
-          , x2 = input[inOffset] & 0xFF |
-                 (input[inOffset += 1] & 0xFF) << 8 |
-                 (input[inOffset += 1] & 0xFF) << 16 |
-                 (input[inOffset += 1] & 0xFF) << 24
+          /*eslint-disable no-plusplus*/
+          , x2 = input[inOffset++] & 0xFF |
+                 (input[inOffset++] & 0xFF) << 8 |
+                 (input[inOffset++] & 0xFF) << 16 |
+                 (input[inOffset++] & 0xFF) << 24
 
-          , x3 = input[inOffset += 1] & 0xFF |
-                 (input[inOffset += 1] & 0xFF) << 8 |
-                 (input[inOffset += 1] & 0xFF) << 16 |
-                 (input[inOffset += 1] & 0xFF) << 24
+          , x3 = input[inOffset++] & 0xFF |
+                 (input[inOffset++] & 0xFF) << 8 |
+                 (input[inOffset++] & 0xFF) << 16 |
+                 (input[inOffset++] & 0xFF) << 24
 
-          , x0 = input[inOffset += 1] & 0xFF |
-                 (input[inOffset += 1] & 0xFF) << 8 |
-                 (input[inOffset += 1] & 0xFF) << 16 |
-                 (input[inOffset += 1] & 0xFF) << 24
+          , x0 = input[inOffset++] & 0xFF |
+                 (input[inOffset++] & 0xFF) << 8 |
+                 (input[inOffset++] & 0xFF) << 16 |
+                 (input[inOffset++] & 0xFF) << 24
 
-          , x1 = input[inOffset += 1] & 0xFF |
-                 (input[inOffset += 1] & 0xFF) << 8 |
-                 (input[inOffset += 1] & 0xFF) << 16 |
-                 (input[inOffset += 1] & 0xFF) << 24
+          , x1 = input[inOffset++] & 0xFF |
+                 (input[inOffset++] & 0xFF) << 8 |
+                 (input[inOffset++] & 0xFF) << 16 |
+                 (input[inOffset++] & 0xFF) << 24
+          /*eslint-enable no-plusplus*/
 
           , k = ROUND_SUBKEYS + 2 * ROUNDS - 1
           , t0
