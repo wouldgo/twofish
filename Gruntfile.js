@@ -28,7 +28,8 @@
         },
         'target': [
           'Gruntfile.js',
-          '<%= confs.src %>/**/*.js'//, '<%= confs.spec %>/**/*.js'
+          '<%= confs.src %>/**/*.js',
+          '<%= confs.spec %>/**/*.js'
         ]
       },
       'uglify': {

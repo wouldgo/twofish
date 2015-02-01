@@ -775,8 +775,7 @@
       var i
         , offset
         , cpt = []
-        , tmpBlockDecrypt
-        , block;
+        , tmpBlockDecrypt;
 
       if (utils.isAnArray(userKey) &&
         utils.isAnArray(chiperText)) {
@@ -794,11 +793,7 @@
         tmpBlockDecrypt = blockDecrypt(chiperText, offset, userKey);
         for (i = 0; i < tmpBlockDecrypt.length; i += 1) {
 
-          block = tmpBlockDecrypt[i];
-          if (block !== 0x00) {
-
-            cpt.push(block);
-          }
+          cpt.push(tmpBlockDecrypt[i]);
         }
       }
 
