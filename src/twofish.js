@@ -436,7 +436,7 @@
                        sBox[0x200 + 2 * chooseB(x, R + 3) + 1];
 
         return new Uint32Array([toReturn])[0];
-      }/*
+      }
       , xorBuffers = function xorBuffers(a, b) {
 
         var res = []
@@ -459,7 +459,7 @@
         }
 
         return new Uint8Array(res);
-      }*/
+      }
       , makeKey = function makeKey(aKey) {
 
         if (aKey &&
@@ -798,9 +798,8 @@
       }
 
       return cpt;
-    };
-
-    /*, encryptCBC = function(userKey, plainText) {
+    }
+    , encryptCBC = function encryptCBC(userKey, plainText) {
       if (utils.isAnArray(userKey) &&
         utils.isAnArray(plainText)) {
 
@@ -818,17 +817,22 @@
         , cBuffer = []
         , buffer1 = []
         , buffer2 = []
-        , vector = initializingVector;
+        , vector = initializingVector
+        , index = 0
+        , secondIndex = 0
+        , tmpCBuffer
+        , nVal
+        , position;
 
-      for (var i = 0; i < loops; i += 1) {
+      for (; index < loops; index += 1) {
 
         cBuffer = plainText.subarray(pos, pos + BLOCK_SIZE);
         if (cBuffer.length < BLOCK_SIZE) {
 
-          var tmpCBuffer = [];
-          for (var paddingIndex = 0; paddingIndex < BLOCK_SIZE; paddingIndex += 1) {
+          tmpCBuffer = [];
+          for (paddingIndex = 0; paddingIndex < BLOCK_SIZE; paddingIndex += 1) {
 
-            var nVal = cBuffer[paddingIndex];
+            nVal = cBuffer[paddingIndex];
             if (nVal !== undefined) {
 
               tmpCBuffer.push(nVal);
@@ -842,12 +846,12 @@
         buffer1 = xorBuffers(cBuffer, vector);
         buffer2 = blockEncrypt(buffer1, 0, userKey);
 
-        for (var d = pos; d < buffer2.length + pos; d += 1) {
+        for (secondIndex = pos; secondIndex < buffer2.length + pos; secondIndex += 1) {
 
-          var position = d - pos;
+          position = secondIndex - pos;
           if (buffer2[position] !== undefined) {
 
-            result.splice(d, 0, buffer2[position]);
+            result.splice(secondIndex, 0, buffer2[position]);
           }
         }
         vector = buffer2;
@@ -856,7 +860,7 @@
 
       return result;
     }
-    , decryptCBC = function(userKey, chiperText) {
+    , decryptCBC = function decryptCBC(userKey, chiperText) {
       if (utils.isAnArray(userKey) &&
         utils.isAnArray(chiperText)) {
 
@@ -874,17 +878,22 @@
         , cBuffer = []
         , buffer1 = []
         , plain = []
-        , vector = initializingVector;
+        , vector = initializingVector
+        , index = 0
+        , secondIndex = 0
+        , tmpCBuffer
+        , nVal
+        , position;
 
-      for (var i = 0; i < loops; i += 1) {
+      for (; index < loops; index += 1) {
 
-        cBuffer = chiperText.slice(pos, pos + BLOCK_SIZE);
+        cBuffer = chiperText.subarray(pos, pos + BLOCK_SIZE);
         if (cBuffer.length < BLOCK_SIZE) {
 
-          var tmpCBuffer = [];
-          for (var paddingIndex = 0; paddingIndex < BLOCK_SIZE; paddingIndex += 1) {
+          tmpCBuffer = [];
+          for (paddingIndex = 0; paddingIndex < BLOCK_SIZE; paddingIndex += 1) {
 
-            var nVal = cBuffer[paddingIndex];
+            nVal = cBuffer[paddingIndex];
             if (nVal !== undefined) {
 
               tmpCBuffer.push(nVal);
@@ -898,12 +907,12 @@
         buffer1 = blockDecrypt(cBuffer, 0, userKey);
         plain = xorBuffers(buffer1, vector);
 
-        for (var d = pos; d < plain.length + pos; d += 1) {
+        for (secondIndex = pos; secondIndex < plain.length + pos; secondIndex += 1) {
 
-          var position = d - pos;
-          if (plain[position]) {
+          position = secondIndex - pos;
+          if (plain[position] !== undefined) {
 
-            result.splice(d, 0, plain[position]);
+            result.splice(secondIndex, 0, plain[position]);
           }
         }
         plain = [];
@@ -913,7 +922,7 @@
       }
 
       return result;
-    };*/
+    };
 
     if (!IV) {
 
@@ -953,9 +962,9 @@
 
       'equalsArray': utils.areEqual,
       'encrypt': encrypt,
-      'decrypt': decrypt/*,
-      'encryptCBCMode': encryptCBC,
-      'decryptCBCMode': decryptCBC*/
+      'decrypt': decrypt,
+      'encryptCBC': encryptCBC,
+      'decryptCBC': decryptCBC
     };
   };
 
