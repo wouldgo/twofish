@@ -48,9 +48,17 @@
         }
       },
       'jasmine': {
-        'src': '<%= confs.src %>/<%= pkg.name %>.js',
-        'options': {
-          'specs': '<%= confs.spec %>/**/*.js'
+        'ecb': {
+          'src': '<%= confs.src %>/<%= pkg.name %>.js',
+          'options': {
+            'specs': '<%= confs.spec %>/**/ecb-*.js'
+          }
+        },
+        'cbc': {
+          'src': '<%= confs.src %>/<%= pkg.name %>.js',
+          'options': {
+            'specs': '<%= confs.spec %>/**/cbc-*.js'
+          }
         }
       }
     });
