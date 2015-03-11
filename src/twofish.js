@@ -15,55 +15,169 @@
 
       var isAnArray = function isAnArray(someVar) {
 
-        if (Array.isArray(someVar) ||
-            Object.prototype.toString.call( someVar ) === '[object Uint8Array]') {
+          if (Array.isArray(someVar) ||
+              Object.prototype.toString.call( someVar ) === '[object Uint8Array]') {
 
+            return true;
+          }
+          return false;
+        }
+        , areEqual = function areEqual(first, second) {
+
+          var firstLength = first.length
+            , secondLength = second.length
+            , diffLength
+            , arraysEqualLenghtIndex = 0;
+
+          if (firstLength > secondLength) {
+
+            diffLength = firstLength - secondLength;
+            for (; diffLength >= 0; diffLength -= 1) {
+
+              if (first[firstLength - diffLength]) {
+
+                return false;
+              }
+            }
+          } else if (secondLength > firstLength) {
+
+            diffLength = secondLength - firstLength;
+            for (; diffLength >= 0; diffLength -= 1) {
+
+              if (second[secondLength - diffLength]) {
+
+                return false;
+              }
+            }
+          }
+
+          for (; arraysEqualLenghtIndex < firstLength; arraysEqualLenghtIndex += 1) {
+
+            if (first[arraysEqualLenghtIndex] !== second[arraysEqualLenghtIndex]) {
+
+              return false;
+            }
+          }
           return true;
         }
-        return false;
-      }
-      , areEqual = function areEqual(first, second) {
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Base64_encoding_and_decoding
+        , UTF8ArrToStr = function UTF8ArrToStr(aBytes) {
 
-        var firstLength = first.length
-          , secondLength = second.length
-          , diffLength
-          , arraysEqualLenghtIndex = 0;
+          var sView = ''
+            , nPart
+            , nLen = aBytes.length
+            , nIdx = 0;
+          for (; nIdx < nLen; nIdx += 1) {
 
-        if (firstLength > secondLength) {
+            nPart = aBytes[nIdx];
+            /*eslint-disable no-plusplus, no-nested-ternary*/
+            sView += String.fromCharCode(
+              nPart > 251 && nPart < 254 && nIdx + 5 < nLen ? /* six bytes */
+                /* (nPart - 252 << 32) is not possible in ECMAScript! So...: */
+                (nPart - 252) * 1073741824 + (aBytes[++nIdx] - 128 << 24) + (aBytes[++nIdx] - 128 << 18) + (aBytes[++nIdx] - 128 << 12) + (aBytes[++nIdx] - 128 << 6) + aBytes[++nIdx] - 128
+              : nPart > 247 && nPart < 252 && nIdx + 4 < nLen ? /* five bytes */
+                (nPart - 248 << 24) + (aBytes[++nIdx] - 128 << 18) + (aBytes[++nIdx] - 128 << 12) + (aBytes[++nIdx] - 128 << 6) + aBytes[++nIdx] - 128
+              : nPart > 239 && nPart < 248 && nIdx + 3 < nLen ? /* four bytes */
+                (nPart - 240 << 18) + (aBytes[++nIdx] - 128 << 12) + (aBytes[++nIdx] - 128 << 6) + aBytes[++nIdx] - 128
+              : nPart > 223 && nPart < 240 && nIdx + 2 < nLen ? /* three bytes */
+                (nPart - 224 << 12) + (aBytes[++nIdx] - 128 << 6) + aBytes[++nIdx] - 128
+              : nPart > 191 && nPart < 224 && nIdx + 1 < nLen ? /* two bytes */
+                (nPart - 192 << 6) + aBytes[++nIdx] - 128
+              : /* nPart < 127 ? */ /* one byte */
+                nPart
+            );
+            /*eslint-enable no-plusplus, no-nested-ternary*/
+          }
 
-          diffLength = firstLength - secondLength;
-          for (; diffLength >= 0; diffLength -= 1) {
+          return sView;
+        }
+        , strToUTF8Arr = function strToUTF8Arr(sDOMStr) {
 
-            if (first[firstLength - diffLength]) {
+          var aBytes
+            , nChr
+            , nStrLen = sDOMStr.length
+            , nArrLen = 0
+            , nMapIdx = 0
+            , nIdx = 0
+            , nChrIdx = 0
+            , paddingValue
+            , paddingIndex;
 
-              return false;
+          /* mapping... */
+          for (; nMapIdx < nStrLen; nMapIdx += 1) {
+
+            nChr = sDOMStr.charCodeAt(nMapIdx);
+            /*eslint-disable no-nested-ternary*/
+            nArrLen += nChr < 0x80 ? 1 : nChr < 0x800 ? 2 : nChr < 0x10000 ? 3 : nChr < 0x200000 ? 4 : nChr < 0x4000000 ? 5 : 6;
+            /*eslint-enable no-nested-ternary*/
+          }
+
+          aBytes = [];
+
+          /* transcription... */
+          for (; nIdx < nArrLen; nChrIdx += 1) {
+
+            nChr = sDOMStr.charCodeAt(nChrIdx);
+            /*eslint-disable no-plusplus*/
+            if (nChr < 128) {
+
+              /* one byte */
+              aBytes[nIdx++] = nChr;
+            } else if (nChr < 0x800) {
+
+              /* two bytes */
+              aBytes[nIdx++] = 192 + (nChr >>> 6);
+              aBytes[nIdx++] = 128 + (nChr & 63);
+            } else if (nChr < 0x10000) {
+
+              /* three bytes */
+              aBytes[nIdx++] = 224 + (nChr >>> 12);
+              aBytes[nIdx++] = 128 + (nChr >>> 6 & 63);
+              aBytes[nIdx++] = 128 + (nChr & 63);
+            } else if (nChr < 0x200000) {
+
+              /* four bytes */
+              aBytes[nIdx++] = 240 + (nChr >>> 18);
+              aBytes[nIdx++] = 128 + (nChr >>> 12 & 63);
+              aBytes[nIdx++] = 128 + (nChr >>> 6 & 63);
+              aBytes[nIdx++] = 128 + (nChr & 63);
+            } else if (nChr < 0x4000000) {
+
+              /* five bytes */
+              aBytes[nIdx++] = 248 + (nChr >>> 24);
+              aBytes[nIdx++] = 128 + (nChr >>> 18 & 63);
+              aBytes[nIdx++] = 128 + (nChr >>> 12 & 63);
+              aBytes[nIdx++] = 128 + (nChr >>> 6 & 63);
+              aBytes[nIdx++] = 128 + (nChr & 63);
+            } else {
+
+              /* six bytes */
+              aBytes[nIdx++] = 252 + nChr / 1073741824;
+              aBytes[nIdx++] = 128 + (nChr >>> 24 & 63);
+              aBytes[nIdx++] = 128 + (nChr >>> 18 & 63);
+              aBytes[nIdx++] = 128 + (nChr >>> 12 & 63);
+              aBytes[nIdx++] = 128 + (nChr >>> 6 & 63);
+              aBytes[nIdx++] = 128 + (nChr & 63);
+            }
+            /*eslint-enable no-plusplus*/
+          }
+
+          paddingValue = aBytes.length % 16;
+          if (paddingValue !== 0) {
+
+            for (paddingIndex = 0; paddingIndex < 16 - paddingValue; paddingIndex += 1) {
+
+              aBytes.push(0);
             }
           }
-        } else if (secondLength > firstLength) {
-
-          diffLength = secondLength - firstLength;
-          for (; diffLength >= 0; diffLength -= 1) {
-
-            if (second[secondLength - diffLength]) {
-
-              return false;
-            }
-          }
-        }
-
-        for (; arraysEqualLenghtIndex < firstLength; arraysEqualLenghtIndex += 1) {
-
-          if (first[arraysEqualLenghtIndex] !== second[arraysEqualLenghtIndex]) {
-
-            return false;
-          }
-        }
-        return true;
-      };
+          return aBytes;
+        };
 
       return {
         'isAnArray': isAnArray,
-        'areEqual': areEqual
+        'areEqual': areEqual,
+        'UTF8ArrToStr': UTF8ArrToStr,
+        'strToUTF8Arr': strToUTF8Arr
       };
     };
 
@@ -583,346 +697,346 @@
 
         throw 'key passed is undefined or not an array';
       }
-    , blockEncrypt = function blockEncrypt(input, inOffset, sessionKey) {
+      , blockEncrypt = function blockEncrypt(input, inOffset, sessionKey) {
 
-      if (input &&
-        sessionKey &&
-        utils.isAnArray(sessionKey) &&
-        utils.isAnArray(input)) {
+        if (input &&
+          sessionKey &&
+          utils.isAnArray(sessionKey) &&
+          utils.isAnArray(input)) {
 
-        input = new Uint8Array(input);
-        var sBox = sessionKey[0]
-          , sKey = sessionKey[1]
+          input = new Uint8Array(input);
+          var sBox = sessionKey[0]
+            , sKey = sessionKey[1]
 
-          /*eslint-disable no-plusplus*/
-          , x0 = input[inOffset++] & 0xFF |
-                 (input[inOffset++] & 0xFF) << 8 |
-                 (input[inOffset++] & 0xFF) << 16 |
-                 (input[inOffset++] & 0xFF) << 24
+            /*eslint-disable no-plusplus*/
+            , x0 = input[inOffset++] & 0xFF |
+                   (input[inOffset++] & 0xFF) << 8 |
+                   (input[inOffset++] & 0xFF) << 16 |
+                   (input[inOffset++] & 0xFF) << 24
 
-          , x1 = input[inOffset++] & 0xFF |
-                 (input[inOffset++] & 0xFF) << 8 |
-                 (input[inOffset++] & 0xFF) << 16 |
-                 (input[inOffset++] & 0xFF) << 24
+            , x1 = input[inOffset++] & 0xFF |
+                   (input[inOffset++] & 0xFF) << 8 |
+                   (input[inOffset++] & 0xFF) << 16 |
+                   (input[inOffset++] & 0xFF) << 24
 
-          , x2 = input[inOffset++] & 0xFF |
-                 (input[inOffset++] & 0xFF) << 8 |
-                 (input[inOffset++] & 0xFF) << 16 |
-                 (input[inOffset++] & 0xFF) << 24
+            , x2 = input[inOffset++] & 0xFF |
+                   (input[inOffset++] & 0xFF) << 8 |
+                   (input[inOffset++] & 0xFF) << 16 |
+                   (input[inOffset++] & 0xFF) << 24
 
-          , x3 = input[inOffset++] & 0xFF |
-                 (input[inOffset++] & 0xFF) << 8 |
-                 (input[inOffset++] & 0xFF) << 16 |
-                 (input[inOffset++] & 0xFF) << 24
-          /*eslint-enable no-plusplus*/
+            , x3 = input[inOffset++] & 0xFF |
+                   (input[inOffset++] & 0xFF) << 8 |
+                   (input[inOffset++] & 0xFF) << 16 |
+                   (input[inOffset++] & 0xFF) << 24
+            /*eslint-enable no-plusplus*/
 
-          , t0
-          , t1
-          , k = ROUND_SUBKEYS
-          , R = 0;
+            , t0
+            , t1
+            , k = ROUND_SUBKEYS
+            , R = 0;
 
-        x0 ^= sKey[INPUT_WHITEN];
-        x1 ^= sKey[INPUT_WHITEN + 1];
-        x2 ^= sKey[INPUT_WHITEN + 2];
-        x3 ^= sKey[INPUT_WHITEN + 3];
-        for (R = 0; R < ROUNDS; R += 2) {
+          x0 ^= sKey[INPUT_WHITEN];
+          x1 ^= sKey[INPUT_WHITEN + 1];
+          x2 ^= sKey[INPUT_WHITEN + 2];
+          x3 ^= sKey[INPUT_WHITEN + 3];
+          for (R = 0; R < ROUNDS; R += 2) {
 
-          t0 = fe32(sBox, x0, 0);
-          t1 = fe32(sBox, x1, 3);
-          /*eslint-disable no-plusplus*/
-          x2 ^= t0 + t1 + sKey[k++];
-          /*eslint-enable no-plusplus*/
-          x2 = x2 >>> 1 | x2 << 31;
-          x3 = x3 << 1 | x3 >>> 31;
-          /*eslint-disable no-plusplus*/
-          x3 ^= t0 + 2 * t1 + sKey[k++];
-          /*eslint-enable no-plusplus*/
+            t0 = fe32(sBox, x0, 0);
+            t1 = fe32(sBox, x1, 3);
+            /*eslint-disable no-plusplus*/
+            x2 ^= t0 + t1 + sKey[k++];
+            /*eslint-enable no-plusplus*/
+            x2 = x2 >>> 1 | x2 << 31;
+            x3 = x3 << 1 | x3 >>> 31;
+            /*eslint-disable no-plusplus*/
+            x3 ^= t0 + 2 * t1 + sKey[k++];
+            /*eslint-enable no-plusplus*/
 
-          t0 = fe32(sBox, x2, 0);
-          t1 = fe32(sBox, x3, 3);
-          /*eslint-disable no-plusplus*/
-          x0 ^= t0 + t1 + sKey[k++];
-          /*eslint-enable no-plusplus*/
-          x0 = x0 >>> 1 | x0 << 31;
-          x1 = x1 << 1 | x1 >>> 31;
-          /*eslint-disable no-plusplus*/
-          x1 ^= t0 + 2 * t1 + sKey[k++];
-          /*eslint-enable no-plusplus*/
+            t0 = fe32(sBox, x2, 0);
+            t1 = fe32(sBox, x3, 3);
+            /*eslint-disable no-plusplus*/
+            x0 ^= t0 + t1 + sKey[k++];
+            /*eslint-enable no-plusplus*/
+            x0 = x0 >>> 1 | x0 << 31;
+            x1 = x1 << 1 | x1 >>> 31;
+            /*eslint-disable no-plusplus*/
+            x1 ^= t0 + 2 * t1 + sKey[k++];
+            /*eslint-enable no-plusplus*/
+          }
+
+          x2 ^= sKey[OUTPUT_WHITEN];
+          x3 ^= sKey[OUTPUT_WHITEN + 1];
+          x0 ^= sKey[OUTPUT_WHITEN + 2];
+          x1 ^= sKey[OUTPUT_WHITEN + 3];
+
+          return new Uint8Array([x2, x2 >>> 8, x2 >>> 16, x2 >>> 24,
+             x3, x3 >>> 8, x3 >>> 16, x3 >>> 24,
+             x0, x0 >>> 8, x0 >>> 16, x0 >>> 24,
+             x1, x1 >>> 8, x1 >>> 16, x1 >>> 24]);
         }
 
-        x2 ^= sKey[OUTPUT_WHITEN];
-        x3 ^= sKey[OUTPUT_WHITEN + 1];
-        x0 ^= sKey[OUTPUT_WHITEN + 2];
-        x1 ^= sKey[OUTPUT_WHITEN + 3];
-
-        return new Uint8Array([x2, x2 >>> 8, x2 >>> 16, x2 >>> 24,
-           x3, x3 >>> 8, x3 >>> 16, x3 >>> 24,
-           x0, x0 >>> 8, x0 >>> 16, x0 >>> 24,
-           x1, x1 >>> 8, x1 >>> 16, x1 >>> 24]);
+        throw 'input block is not an array or sessionKey is incorrect';
       }
+      , blockDecrypt = function blockDecrypt(input, inOffset, sessionKey) {
 
-      throw 'input block is not an array or sessionKey is incorrect';
-    }
-    , blockDecrypt = function blockDecrypt(input, inOffset, sessionKey) {
+        if (input &&
+          sessionKey &&
+          utils.isAnArray(sessionKey) &&
+          utils.isAnArray(input)) {
 
-      if (input &&
-        sessionKey &&
-        utils.isAnArray(sessionKey) &&
-        utils.isAnArray(input)) {
+          var sBox = sessionKey[0]
+            , sKey = sessionKey[1]
 
-        var sBox = sessionKey[0]
-          , sKey = sessionKey[1]
+            /*eslint-disable no-plusplus*/
+            , x2 = input[inOffset++] & 0xFF |
+                   (input[inOffset++] & 0xFF) << 8 |
+                   (input[inOffset++] & 0xFF) << 16 |
+                   (input[inOffset++] & 0xFF) << 24
 
-          /*eslint-disable no-plusplus*/
-          , x2 = input[inOffset++] & 0xFF |
-                 (input[inOffset++] & 0xFF) << 8 |
-                 (input[inOffset++] & 0xFF) << 16 |
-                 (input[inOffset++] & 0xFF) << 24
+            , x3 = input[inOffset++] & 0xFF |
+                   (input[inOffset++] & 0xFF) << 8 |
+                   (input[inOffset++] & 0xFF) << 16 |
+                   (input[inOffset++] & 0xFF) << 24
 
-          , x3 = input[inOffset++] & 0xFF |
-                 (input[inOffset++] & 0xFF) << 8 |
-                 (input[inOffset++] & 0xFF) << 16 |
-                 (input[inOffset++] & 0xFF) << 24
+            , x0 = input[inOffset++] & 0xFF |
+                   (input[inOffset++] & 0xFF) << 8 |
+                   (input[inOffset++] & 0xFF) << 16 |
+                   (input[inOffset++] & 0xFF) << 24
 
-          , x0 = input[inOffset++] & 0xFF |
-                 (input[inOffset++] & 0xFF) << 8 |
-                 (input[inOffset++] & 0xFF) << 16 |
-                 (input[inOffset++] & 0xFF) << 24
+            , x1 = input[inOffset++] & 0xFF |
+                   (input[inOffset++] & 0xFF) << 8 |
+                   (input[inOffset++] & 0xFF) << 16 |
+                   (input[inOffset++] & 0xFF) << 24
+            /*eslint-enable no-plusplus*/
 
-          , x1 = input[inOffset++] & 0xFF |
-                 (input[inOffset++] & 0xFF) << 8 |
-                 (input[inOffset++] & 0xFF) << 16 |
-                 (input[inOffset++] & 0xFF) << 24
-          /*eslint-enable no-plusplus*/
+            , k = ROUND_SUBKEYS + 2 * ROUNDS - 1
+            , t0
+            , t1
+            , R = 0;
 
-          , k = ROUND_SUBKEYS + 2 * ROUNDS - 1
-          , t0
-          , t1
-          , R = 0;
+          x2 ^= sKey[OUTPUT_WHITEN];
+          x3 ^= sKey[OUTPUT_WHITEN + 1];
+          x0 ^= sKey[OUTPUT_WHITEN + 2];
+          x1 ^= sKey[OUTPUT_WHITEN + 3];
+          for (R = 0; R < ROUNDS; R += 2) {
 
-        x2 ^= sKey[OUTPUT_WHITEN];
-        x3 ^= sKey[OUTPUT_WHITEN + 1];
-        x0 ^= sKey[OUTPUT_WHITEN + 2];
-        x1 ^= sKey[OUTPUT_WHITEN + 3];
-        for (R = 0; R < ROUNDS; R += 2) {
+            t0 = fe32(sBox, x2, 0);
+            t1 = fe32(sBox, x3, 3);
+            /*eslint-disable no-plusplus*/
+            x1 ^= t0 + 2 * t1 + sKey[k--];
+            /*eslint-enable no-plusplus*/
+            x1 = x1 >>> 1 | x1 << 31;
+            x0 = x0 << 1 | x0 >>> 31;
+            /*eslint-disable no-plusplus*/
+            x0 ^= t0 + t1 + sKey[k--];
+            /*eslint-enable no-plusplus*/
 
-          t0 = fe32(sBox, x2, 0);
-          t1 = fe32(sBox, x3, 3);
-          /*eslint-disable no-plusplus*/
-          x1 ^= t0 + 2 * t1 + sKey[k--];
-          /*eslint-enable no-plusplus*/
-          x1 = x1 >>> 1 | x1 << 31;
-          x0 = x0 << 1 | x0 >>> 31;
-          /*eslint-disable no-plusplus*/
-          x0 ^= t0 + t1 + sKey[k--];
-          /*eslint-enable no-plusplus*/
+            t0 = fe32(sBox, x0, 0);
+            t1 = fe32(sBox, x1, 3);
+            /*eslint-disable no-plusplus*/
+            x3 ^= t0 + 2 * t1 + sKey[k--];
+            /*eslint-enable no-plusplus*/
+            x3 = x3 >>> 1 | x3 << 31;
+            x2 = x2 << 1 | x2 >>> 31;
+            /*eslint-disable no-plusplus*/
+            x2 ^= t0 + t1 + sKey[k--];
+            /*eslint-enable no-plusplus*/
+          }
 
-          t0 = fe32(sBox, x0, 0);
-          t1 = fe32(sBox, x1, 3);
-          /*eslint-disable no-plusplus*/
-          x3 ^= t0 + 2 * t1 + sKey[k--];
-          /*eslint-enable no-plusplus*/
-          x3 = x3 >>> 1 | x3 << 31;
-          x2 = x2 << 1 | x2 >>> 31;
-          /*eslint-disable no-plusplus*/
-          x2 ^= t0 + t1 + sKey[k--];
-          /*eslint-enable no-plusplus*/
+          x0 ^= sKey[INPUT_WHITEN];
+          x1 ^= sKey[INPUT_WHITEN + 1];
+          x2 ^= sKey[INPUT_WHITEN + 2];
+          x3 ^= sKey[INPUT_WHITEN + 3];
+
+          return new Uint8Array([x0, x0 >>> 8, x0 >>> 16, x0 >>> 24,
+            x1, x1 >>> 8, x1 >>> 16, x1 >>> 24,
+            x2, x2 >>> 8, x2 >>> 16, x2 >>> 24,
+            x3, x3 >>> 8, x3 >>> 16, x3 >>> 24]);
         }
 
-        x0 ^= sKey[INPUT_WHITEN];
-        x1 ^= sKey[INPUT_WHITEN + 1];
-        x2 ^= sKey[INPUT_WHITEN + 2];
-        x3 ^= sKey[INPUT_WHITEN + 3];
-
-        return new Uint8Array([x0, x0 >>> 8, x0 >>> 16, x0 >>> 24,
-          x1, x1 >>> 8, x1 >>> 16, x1 >>> 24,
-          x2, x2 >>> 8, x2 >>> 16, x2 >>> 24,
-          x3, x3 >>> 8, x3 >>> 16, x3 >>> 24]);
+        throw 'input block is not an array or sessionKey is incorrect';
       }
+      , encrypt = function encrypt(userKey, plainText) {
+        var i
+          , offset
+          , ct = []
+          , tmpBlockEncrypt;
 
-      throw 'input block is not an array or sessionKey is incorrect';
-    }
-    , encrypt = function encrypt(userKey, plainText) {
-      var i
-        , offset
-        , ct = []
-        , tmpBlockEncrypt;
+        if (utils.isAnArray(userKey) &&
+          utils.isAnArray(plainText)) {
 
-      if (utils.isAnArray(userKey) &&
-        utils.isAnArray(plainText)) {
+          userKey = new Uint8Array(userKey);
+          plainText = new Uint8Array(plainText);
+        } else {
 
-        userKey = new Uint8Array(userKey);
-        plainText = new Uint8Array(plainText);
-      } else {
-
-        throw 'Inputs must be an array';
-      }
-
-      userKey = makeKey(userKey);
-
-      for (offset = 0; offset < plainText.length; offset += 16) {
-
-        tmpBlockEncrypt = blockEncrypt(plainText, offset, userKey);
-        for (i = 0; i < tmpBlockEncrypt.length; i += 1) {
-
-          ct.push(tmpBlockEncrypt[i]);
+          throw 'Inputs must be an array';
         }
-      }
 
-      return ct;
-    }
-    , decrypt = function decrypt(userKey, chiperText) {
-      var i
-        , offset
-        , cpt = []
-        , tmpBlockDecrypt;
+        userKey = makeKey(userKey);
 
-      if (utils.isAnArray(userKey) &&
-        utils.isAnArray(chiperText)) {
+        for (offset = 0; offset < plainText.length; offset += 16) {
 
-        userKey = new Uint8Array(userKey);
-        chiperText = new Uint8Array(chiperText);
-      } else {
+          tmpBlockEncrypt = blockEncrypt(plainText, offset, userKey);
+          for (i = 0; i < tmpBlockEncrypt.length; i += 1) {
 
-        throw 'Inputs must be an array';
-      }
-      userKey = makeKey(userKey);
-
-      for (offset = 0; offset < chiperText.length; offset += 16) {
-
-        tmpBlockDecrypt = blockDecrypt(chiperText, offset, userKey);
-        for (i = 0; i < tmpBlockDecrypt.length; i += 1) {
-
-          cpt.push(tmpBlockDecrypt[i]);
+            ct.push(tmpBlockEncrypt[i]);
+          }
         }
+
+        return ct;
       }
+      , decrypt = function decrypt(userKey, chiperText) {
+        var i
+          , offset
+          , cpt = []
+          , tmpBlockDecrypt;
 
-      return cpt;
-    }
-    , encryptCBC = function encryptCBC(userKey, plainText) {
-      if (utils.isAnArray(userKey) &&
-        utils.isAnArray(plainText)) {
+        if (utils.isAnArray(userKey) &&
+          utils.isAnArray(chiperText)) {
 
-        userKey = new Uint8Array(userKey);
-        plainText = new Uint8Array(plainText);
-      } else {
+          userKey = new Uint8Array(userKey);
+          chiperText = new Uint8Array(chiperText);
+        } else {
 
-        throw 'Inputs must be an array';
+          throw 'Inputs must be an array';
+        }
+        userKey = makeKey(userKey);
+
+        for (offset = 0; offset < chiperText.length; offset += 16) {
+
+          tmpBlockDecrypt = blockDecrypt(chiperText, offset, userKey);
+          for (i = 0; i < tmpBlockDecrypt.length; i += 1) {
+
+            cpt.push(tmpBlockDecrypt[i]);
+          }
+        }
+
+        return cpt;
       }
-      userKey = makeKey(userKey);
+      , encryptCBC = function encryptCBC(userKey, plainText) {
+        if (utils.isAnArray(userKey) &&
+          utils.isAnArray(plainText)) {
 
-      var result = []
-        , loops = plainText.length / BLOCK_SIZE
-        , pos = 0
-        , cBuffer = []
-        , buffer1 = []
-        , buffer2 = []
-        , vector = initializingVector
-        , index = 0
-        , secondIndex = 0
-        , tmpCBuffer
-        , nVal
-        , position;
+          userKey = new Uint8Array(userKey);
+          plainText = new Uint8Array(plainText);
+        } else {
 
-      for (; index < loops; index += 1) {
+          throw 'Inputs must be an array';
+        }
+        userKey = makeKey(userKey);
 
-        cBuffer = plainText.subarray(pos, pos + BLOCK_SIZE);
-        if (cBuffer.length < BLOCK_SIZE) {
+        var result = []
+          , loops = plainText.length / BLOCK_SIZE
+          , pos = 0
+          , cBuffer = []
+          , buffer1 = []
+          , buffer2 = []
+          , vector = initializingVector
+          , index = 0
+          , secondIndex = 0
+          , tmpCBuffer
+          , nVal
+          , position;
 
-          tmpCBuffer = [];
-          for (paddingIndex = 0; paddingIndex < BLOCK_SIZE; paddingIndex += 1) {
+        for (; index < loops; index += 1) {
 
-            nVal = cBuffer[paddingIndex];
-            if (nVal !== undefined) {
+          cBuffer = plainText.subarray(pos, pos + BLOCK_SIZE);
+          if (cBuffer.length < BLOCK_SIZE) {
 
-              tmpCBuffer.push(nVal);
-            } else {
+            tmpCBuffer = [];
+            for (paddingIndex = 0; paddingIndex < BLOCK_SIZE; paddingIndex += 1) {
 
-              tmpCBuffer.push(0x00);
+              nVal = cBuffer[paddingIndex];
+              if (nVal !== undefined) {
+
+                tmpCBuffer.push(nVal);
+              } else {
+
+                tmpCBuffer.push(0x00);
+              }
+            }
+            cBuffer = tmpCBuffer;
+          }
+          buffer1 = xorBuffers(cBuffer, vector);
+          buffer2 = blockEncrypt(buffer1, 0, userKey);
+
+          for (secondIndex = pos; secondIndex < buffer2.length + pos; secondIndex += 1) {
+
+            position = secondIndex - pos;
+            if (buffer2[position] !== undefined) {
+
+              result.splice(secondIndex, 0, buffer2[position]);
             }
           }
-          cBuffer = tmpCBuffer;
+          vector = buffer2;
+          pos += BLOCK_SIZE;
         }
-        buffer1 = xorBuffers(cBuffer, vector);
-        buffer2 = blockEncrypt(buffer1, 0, userKey);
 
-        for (secondIndex = pos; secondIndex < buffer2.length + pos; secondIndex += 1) {
+        return result;
+      }
+      , decryptCBC = function decryptCBC(userKey, chiperText) {
+        if (utils.isAnArray(userKey) &&
+          utils.isAnArray(chiperText)) {
 
-          position = secondIndex - pos;
-          if (buffer2[position] !== undefined) {
+          userKey = new Uint8Array(userKey);
+          chiperText = new Uint8Array(chiperText);
+        } else {
 
-            result.splice(secondIndex, 0, buffer2[position]);
+          throw 'Inputs must be an array';
+        }
+        userKey = makeKey(userKey);
+
+        var result = []
+          , loops = chiperText.length / BLOCK_SIZE
+          , pos = 0
+          , cBuffer = []
+          , buffer1 = []
+          , plain = []
+          , vector = initializingVector
+          , index = 0
+          , secondIndex = 0
+          , tmpCBuffer
+          , nVal
+          , position;
+
+        for (; index < loops; index += 1) {
+
+          cBuffer = chiperText.subarray(pos, pos + BLOCK_SIZE);
+          if (cBuffer.length < BLOCK_SIZE) {
+
+            tmpCBuffer = [];
+            for (paddingIndex = 0; paddingIndex < BLOCK_SIZE; paddingIndex += 1) {
+
+              nVal = cBuffer[paddingIndex];
+              if (nVal !== undefined) {
+
+                tmpCBuffer.push(nVal);
+              } else {
+
+                tmpCBuffer.push(0x00);
+              }
+            }
+            cBuffer = tmpCBuffer;
           }
-        }
-        vector = buffer2;
-        pos += BLOCK_SIZE;
-      }
+          buffer1 = blockDecrypt(cBuffer, 0, userKey);
+          plain = xorBuffers(buffer1, vector);
 
-      return result;
-    }
-    , decryptCBC = function decryptCBC(userKey, chiperText) {
-      if (utils.isAnArray(userKey) &&
-        utils.isAnArray(chiperText)) {
+          for (secondIndex = pos; secondIndex < plain.length + pos; secondIndex += 1) {
 
-        userKey = new Uint8Array(userKey);
-        chiperText = new Uint8Array(chiperText);
-      } else {
+            position = secondIndex - pos;
+            if (plain[position] !== undefined) {
 
-        throw 'Inputs must be an array';
-      }
-      userKey = makeKey(userKey);
-
-      var result = []
-        , loops = chiperText.length / BLOCK_SIZE
-        , pos = 0
-        , cBuffer = []
-        , buffer1 = []
-        , plain = []
-        , vector = initializingVector
-        , index = 0
-        , secondIndex = 0
-        , tmpCBuffer
-        , nVal
-        , position;
-
-      for (; index < loops; index += 1) {
-
-        cBuffer = chiperText.subarray(pos, pos + BLOCK_SIZE);
-        if (cBuffer.length < BLOCK_SIZE) {
-
-          tmpCBuffer = [];
-          for (paddingIndex = 0; paddingIndex < BLOCK_SIZE; paddingIndex += 1) {
-
-            nVal = cBuffer[paddingIndex];
-            if (nVal !== undefined) {
-
-              tmpCBuffer.push(nVal);
-            } else {
-
-              tmpCBuffer.push(0x00);
+              result.splice(secondIndex, 0, plain[position]);
             }
           }
-          cBuffer = tmpCBuffer;
+          plain = [];
+          vector = cBuffer;
+
+          pos += BLOCK_SIZE;
         }
-        buffer1 = blockDecrypt(cBuffer, 0, userKey);
-        plain = xorBuffers(buffer1, vector);
 
-        for (secondIndex = pos; secondIndex < plain.length + pos; secondIndex += 1) {
-
-          position = secondIndex - pos;
-          if (plain[position] !== undefined) {
-
-            result.splice(secondIndex, 0, plain[position]);
-          }
-        }
-        plain = [];
-        vector = cBuffer;
-
-        pos += BLOCK_SIZE;
-      }
-
-      return result;
-    };
+        return result;
+      };
 
     if (!IV) {
 
@@ -961,6 +1075,8 @@
     return {
 
       'equalsArray': utils.areEqual,
+      'byteArrayToString': utils.UTF8ArrToStr,
+      'stringToByteArray': utils.strToUTF8Arr,
       'encrypt': encrypt,
       'decrypt': decrypt,
       'encryptCBC': encryptCBC,
