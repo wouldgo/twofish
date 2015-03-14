@@ -2,15 +2,15 @@
 (function doTest(describe, it, expect, twofish){
   'use strict';
 
-  describe('CBC - Initializing vector passed and less than 16 characters', function doTestSuite() {
+  describe('ECB - strings', function doTestSuite() {
 
-    var twF = twofish([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    var twF = twofish()
       , testCase = function doTestCase(aKey, aPt) {
 
           var key = twF.stringToByteArray(aKey)
             , pt = twF.stringToByteArray(aPt)
-            , ct = twF.encryptCBC(key, pt)
-            , cpt = twF.decryptCBC(key, ct);
+            , ct = twF.encrypt(key, pt)
+            , cpt = twF.decrypt(key, ct);
 
           expect(pt).toEqual(cpt);
         }
@@ -18,11 +18,11 @@
 
           var key = twF.stringToByteArray(aKey)
             , pt = twF.stringToByteArray(aPt)
-            , ct = twF.encryptCBC(key, pt)
+            , ct = twF.encrypt(key, pt)
             , firstArr = ct.slice(0, 16)
             , secondArr = ct.slice(16, 32);
 
-          expect(firstArr).not.toEqual(secondArr);
+          expect(firstArr).toEqual(secondArr);
         }
       , tests = [
           {'testName': '6 char length key - single simple character', 'key': 'secret', 'pt': 'A'},

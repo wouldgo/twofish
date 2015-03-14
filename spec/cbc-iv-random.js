@@ -1,5 +1,5 @@
-/*global describe it expect beforeEach twofish*/
-(function doTest(describe, it, expect, beforeEach, twofish){
+/*global describe it expect twofish*/
+(function doTest(describe, it, expect, twofish){
   'use strict';
 
   describe('CBC - random initializing vector', function doTestSuite() {
@@ -78,4 +78,4 @@
       }
     }
   });
-}(describe, it, expect, beforeEach, twofish));
+}(describe, it, expect, twofish));
