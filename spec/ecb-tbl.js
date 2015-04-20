@@ -1,4 +1,8 @@
-/*global describe it expect twofish*/
+/**
+  * This testing method was described at Appendix A.2 of Twofish paper:
+  * https://www.schneier.com/paper-twofish-paper.pdf
+  */
+/*global describe it expect twofish*/ // Suppressing eslint warnings.
 (function doTest(describe, it, expect, twofish){
   'use strict';
 
@@ -66,15 +70,54 @@
         ]
       , testsIndex = 0
       , testsLength = tests.length
-      , aTest;
+      , aTest
+      , key
+      , pt
+      , ct;
 
     for (; testsIndex < testsLength; testsIndex += 1) {
 
       aTest = tests[testsIndex];
-      useCaseName = 'ecb 128 use case: ' + testsIndex;
+      useCaseName = 'ecb 128, I = ' + (testsIndex + 1);
 
       it(useCaseName, singleTest.bind(this, aTest));
     }
+
+    pt = aTest.pt;
+    ct = aTest.ct;
+    for (; testsIndex + 1 < 46; testsIndex += 1) {
+      key = pt;
+      pt = ct;
+      ct = twF.encrypt(key, pt);
+    }
+
+    aTest = {
+      'key': pt,
+      'pt': ct,
+      'ct': [0x13, 0x7A, 0x24, 0xCA, 0x47, 0xCD, 0x12, 0xBE, 0x81, 0x8D, 0xF4, 0xD2, 0xF4, 0x35, 0x59, 0x60]
+    };
+    it('ecb 128, I = 46', singleTest.bind(this, aTest));
+
+    aTest = {
+      'key': aTest.pt,
+      'pt': aTest.ct,
+      'ct': [0xBC, 0xA7, 0x24, 0xA5, 0x45, 0x33, 0xC6, 0x98, 0x7E, 0x14, 0xAA, 0x82, 0x79, 0x52, 0xF9, 0x21]
+    };
+    it('ecb 128, I = 47', singleTest.bind(this, aTest));
+
+    aTest = {
+      'key': aTest.pt,
+      'pt': aTest.ct,
+      'ct': [0x6B, 0x45, 0x92, 0x86, 0xF3, 0xFF, 0xD2, 0x8D, 0x49, 0xF1, 0x5B, 0x15, 0x81, 0xB0, 0x8E, 0x42]
+    };
+    it('ecb 128, I = 48', singleTest.bind(this, aTest));
+
+    aTest = {
+      'key': aTest.pt,
+      'pt': aTest.ct,
+      'ct': [0x5D, 0x9D, 0x4E, 0xEF, 0xFA, 0x91, 0x51, 0x57, 0x55, 0x24, 0xF1, 0x15, 0x81, 0x5A, 0x12, 0xE0]
+    };
+    it('ecb 128, I = 49', singleTest.bind(this, aTest));
   });
 
   describe('ECB TBL - 192 keysize', function doTestSuite() {
@@ -132,15 +175,55 @@
         ]
       , testsIndex = 0
       , testsLength = tests.length
-      , aTest;
+      , aTest
+      , key
+      , pt
+      , ct;
 
     for (; testsIndex < testsLength; testsIndex += 1) {
 
       aTest = tests[testsIndex];
-      useCaseName = 'ecb 192 use case: ' + testsIndex;
+      useCaseName = 'ecb 192, I = ' + (testsIndex + 1);
 
       it(useCaseName, singleTest.bind(this, aTest));
     }
+
+    key = aTest.key;
+    pt = aTest.pt;
+    ct = aTest.ct;
+    for (; testsIndex + 1 < 46; testsIndex += 1) {
+      key = pt.concat(key.slice(0, 8));
+      pt = ct;
+      ct = twF.encrypt(key, pt);
+    }
+
+    aTest = {
+      'key': pt.concat(key.slice(0, 8)),
+      'pt': ct,
+      'ct': [0xDE, 0xA4, 0xF3, 0xDA, 0x75, 0xEC, 0x7A, 0x8E, 0xAC, 0x38, 0x61, 0xA9, 0x91, 0x24, 0x02, 0xCD]
+    };
+    it('ecb 192, I = 46', singleTest.bind(this, aTest));
+
+    aTest = {
+      'key': aTest.pt.concat(aTest.key.slice(0, 8)),
+      'pt': aTest.ct,
+      'ct': [0xFB, 0x66, 0x52, 0x2C, 0x33, 0x2F, 0xCC, 0x4C, 0x04, 0x2A, 0xBE, 0x32, 0xFA, 0x9E, 0x90, 0x2F]
+    };
+    it('ecb 192, I = 47', singleTest.bind(this, aTest));
+
+    aTest = {
+      'key': aTest.pt.concat(aTest.key.slice(0, 8)),
+      'pt': aTest.ct,
+      'ct': [0xF0, 0xAB, 0x73, 0x30, 0x11, 0x25, 0xFA, 0x21, 0xEF, 0x70, 0xBE, 0x53, 0x85, 0xFB, 0x76, 0xB6]
+    };
+    it('ecb 192, I = 48', singleTest.bind(this, aTest));
+
+    aTest = {
+      'key': aTest.pt.concat(aTest.key.slice(0, 8)),
+      'pt': aTest.ct,
+      'ct': [0xE7, 0x54, 0x49, 0x21, 0x2B, 0xEE, 0xF9, 0xF4, 0xA3, 0x90, 0xBD, 0x86, 0x0A, 0x64, 0x09, 0x41]
+    };
+    it('ecb 192, I = 49', singleTest.bind(this, aTest));
   });
 
   describe('ECB TBL - 256 keysize', function doTestSuite() {
@@ -198,14 +281,61 @@
         ]
       , testsIndex = 0
       , testsLength = tests.length
-      , aTest;
+      , aTest
+      , key
+      , pt
+      , ct;
 
     for (; testsIndex < testsLength; testsIndex += 1) {
 
       aTest = tests[testsIndex];
-      useCaseName = 'ecb 256 use case: ' + testsIndex;
+      useCaseName = 'ecb 256, I = ' + (testsIndex + 1);
 
       it(useCaseName, singleTest.bind(this, aTest));
     }
+
+    key = aTest.key;
+    pt = aTest.pt;
+    ct = aTest.ct;
+    for (; testsIndex + 1 < 45; testsIndex += 1) {
+      key = pt.concat(key.slice(0, 16));
+      pt = ct;
+      ct = twF.encrypt(key, pt);
+    }
+
+    aTest = {
+      'key': pt.concat(key.slice(0, 16)),
+      'pt': ct,
+      'ct': [0xD2, 0xDE, 0xD7, 0x3E, 0x59, 0x31, 0x9A, 0x81, 0x38, 0xE0, 0x33, 0x1F, 0x0E, 0xA1, 0x49, 0xEA]
+    };
+    it('ecb 256, I = 45', singleTest.bind(this, aTest));
+
+    aTest = {
+      'key': aTest.pt.concat(aTest.key.slice(0, 16)),
+      'pt': aTest.ct,
+      'ct': [0x2E, 0x21, 0x58, 0xBC, 0x3E, 0x5F, 0xC7, 0x14, 0xC1, 0xEE, 0xEC, 0xA0, 0xEA, 0x69, 0x6D, 0x48]
+    };
+    it('ecb 256, I = 46', singleTest.bind(this, aTest));
+
+    aTest = {
+      'key': aTest.pt.concat(aTest.key.slice(0, 16)),
+      'pt': aTest.ct,
+      'ct': [0x24, 0x8A, 0x7F, 0x35, 0x28, 0xB1, 0x68, 0xAC, 0xFD, 0xD1, 0x38, 0x6E, 0x3F, 0x51, 0xE3, 0x0C]
+    };
+    it('ecb 256, I = 47', singleTest.bind(this, aTest));
+
+    aTest = {
+      'key': aTest.pt.concat(aTest.key.slice(0, 16)),
+      'pt': aTest.ct,
+      'ct': [0x43, 0x10, 0x58, 0xF4, 0xDB, 0xC7, 0xF7, 0x34, 0xDA, 0x4F, 0x02, 0xF0, 0x4C, 0xC4, 0xF4, 0x59]
+    };
+    it('ecb 256, I = 48', singleTest.bind(this, aTest));
+
+    aTest = {
+      'key': aTest.pt.concat(aTest.key.slice(0, 16)),
+      'pt': aTest.ct,
+      'ct': [0x37, 0xFE, 0x26, 0xFF, 0x1C, 0xF6, 0x61, 0x75, 0xF5, 0xDD, 0xF4, 0xC3, 0x3B, 0x97, 0xA2, 0x05]
+    };
+    it('ecb 256, I = 49', singleTest.bind(this, aTest));
   });
 }(describe, it, expect, twofish));
