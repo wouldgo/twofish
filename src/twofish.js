@@ -70,7 +70,7 @@
           for (; nIdx < nLen; nIdx += 1) {
 
             nPart = aBytes[nIdx];
-            /*eslint-disable no-plusplus, no-nested-ternary*/
+            /*eslint-disable no-plusplus, no-nested-ternary, no-bitwise*/
             sView += String.fromCharCode(
               nPart > 251 && nPart < 254 && nIdx + 5 < nLen ? /* six bytes */
                 /* (nPart - 252 << 32) is not possible in ECMAScript! So...: */
@@ -86,7 +86,7 @@
               : /* nPart < 127 ? */ /* one byte */
                 nPart
             );
-            /*eslint-enable no-plusplus, no-nested-ternary*/
+            /*eslint-enable no-plusplus, no-nested-ternary, no-bitwise*/
           }
 
           return sView;
@@ -118,7 +118,7 @@
           for (; nIdx < nArrLen; nChrIdx += 1) {
 
             nChr = sDOMStr.charCodeAt(nChrIdx);
-            /*eslint-disable no-plusplus*/
+            /*eslint-disable no-plusplus, no-bitwise*/
             if (nChr < 128) {
 
               /* one byte */
@@ -159,7 +159,7 @@
               aBytes[nIdx++] = 128 + (nChr >>> 6 & 63);
               aBytes[nIdx++] = 128 + (nChr & 63);
             }
-            /*eslint-enable no-plusplus*/
+            /*eslint-enable no-plusplus, no-bitwise*/
           }
 
           paddingValue = aBytes.length % 16;
@@ -207,8 +207,11 @@
     return array[this.nextRange(0, array.length)];
   };
 
+  /* eslint-disable no-shadow */
   exports.twofish = function twofish(IV) {
+  /* eslint-enable no-shadow */
 
+    /* eslint-disable no-bitwise*/
     var utils = functionUtils()
       , rng = new RNG()
       , initializingVector = []
@@ -1070,6 +1073,7 @@
 
       throw 'Initlializing vector incorrect';
     }
+    /* eslint-enable no-bitwise*/
     initializingVector = new Uint8Array(initializingVector);
 
     return {
