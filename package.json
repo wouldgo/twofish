@@ -25,5 +25,6 @@
     "email": "wouldgo84@gmail.com",
     "url": "https://github.com/wouldgo"
   },
-  "contributors": []
+  "contributors": [],
+  "main": "src/twofish.js"
 }
